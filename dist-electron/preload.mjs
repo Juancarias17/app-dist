@@ -1,0 +1,1 @@
+"use strict";const e=require("electron");window.addEventListener("wheel",n=>{n.ctrlKey&&(n.preventDefault(),e.ipcRenderer.send("zoom",n.deltaY<0?"in":"out"))},{passive:!1});e.contextBridge.exposeInMainWorld("electronAPI",{zoomIn:()=>e.ipcRenderer.send("zoom","in"),zoomOut:()=>e.ipcRenderer.send("zoom","out")});

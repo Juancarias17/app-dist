@@ -1,0 +1,386 @@
+.dashboard {
+  max-width: 1320px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ── Header ── */
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.dash-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.preset-group {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-alt);
+  padding: 3px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.preset-btn {
+  padding: 0.35rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.preset-btn:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+.preset-btn.active {
+  background: var(--primary);
+  color: var(--bg);
+  box-shadow: 0 1px 3px rgba(100, 139, 162, 0.3);
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.date-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.date-input {
+  border: none;
+  padding: 0.3rem 0;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: transparent;
+  font-family: inherit;
+  width: 120px;
+}
+
+.date-input:focus {
+  outline: none;
+}
+
+.date-picker-dashboard {
+  border: none;
+  padding: 0.3rem 0;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: transparent;
+  width: 120px;
+  min-width: auto;
+  box-shadow: none;
+}
+
+.date-picker-dashboard:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.date-sep {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ── KPI Cards ── */
+.cards-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.dash-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+
+.dash-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.dash-card-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-card-info {
+  min-width: 0;
+}
+
+.dash-card-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.dash-card-value.warn {
+  color: var(--danger);
+}
+
+/* ── Charts grid ── */
+.charts-grid {
+  margin-bottom: 1.5rem;
+}
+
+.charts-grid-2 {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.5rem;
+}
+
+.charts-grid-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.charts-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.chart-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ── Tooltip ── */
+.chart-tooltip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.85rem;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.82rem;
+}
+
+.chart-tooltip-label {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.chart-tooltip-item {
+  margin: 0.15rem 0;
+  font-weight: 500;
+}
+
+/* ── Donut center ── */
+.donut-wrap {
+  position: relative;
+}
+
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.donut-total-label {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.donut-total-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Stock gauge ── */
+.stock-gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gauge-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  fill: var(--text);
+}
+
+.gauge-label {
+  font-size: 0.75rem;
+  fill: var(--text-muted);
+}
+
+.stock-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.stock-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.stock-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stock-legend-item strong {
+  color: var(--text);
+  margin-left: 0.2rem;
+}
+
+/* ── Skeleton ── */
+.dash-card.skeleton {
+  pointer-events: none;
+}
+
+.skeleton-icon {
+  width: 52px;
+  height: 52px;
+  background: var(--bg-alt);
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-text {
+  flex: 1;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: var(--bg-alt);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+.skeleton-line.medium {
+  width: 80%;
+}
+
+.skeleton-chart {
+  height: 240px;
+  background: var(--bg-alt);
+  border-radius: var(--radius);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .charts-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dash-filters {
+    width: 100%;
+  }
+
+  .date-range {
+    flex: 1;
+  }
+
+  .date-input {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+}
