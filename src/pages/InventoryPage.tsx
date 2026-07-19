@@ -157,19 +157,19 @@ export function InventoryPage() {
                       exit="hidden"
                       layout
                     >
-                      <td style={{ fontWeight: 500 }}>{inv.productName}</td>
-                      <td>
+                      <td data-label="Producto" style={{ fontWeight: 500 }}>{inv.productName}</td>
+                      <td data-label="Stock Total">
                         <span className={inv.totalQuantity <= inv.threshold ? 'stock-low' : ''}>
                           {inv.totalQuantity}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Lotes">
                         <button className="btn btn-sm btn-ghost" onClick={() => toggleExpand(inv.id)}>
                           {expandedId === inv.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                           {batches.length} lote{batches.length !== 1 ? 's' : ''}
                         </button>
                       </td>
-                      <td className="actions-cell">
+                      <td data-label="" className="actions-cell">
                         {batches.slice(0, 3).map((b, idx) => (
                           <button key={b.id} className={`btn btn-sm${b.quantity === 0 ? ' btn-danger' : ''}`} onClick={() => openAdjust(b, batchLabel(idx))}>
                             <Layers size={12} />

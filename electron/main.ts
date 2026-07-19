@@ -6,7 +6,6 @@ app.disableHardwareAcceleration()
 app.commandLine.appendSwitch('disable-gpu')
 app.commandLine.appendSwitch('lang', 'es')
 
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 process.env.DIST = path.join(__dirname, '../dist')
@@ -29,7 +28,6 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.mjs'),
     },
   })
-
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
@@ -62,5 +60,3 @@ app.on('activate', () => {
     createWindow()
   }
 })
-
-

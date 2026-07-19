@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   Package,
@@ -10,11 +11,13 @@ import {
   Truck,
   Layers,
   LogOut,
+  Menu,
+  X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useInactivityTimeout } from '../hooks/useInactivityTimeout'
 import './Layout.css'
-import logo from '../assets/logo.jpeg' 
+import logo from '../assets/logo.jpeg'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -30,16 +33,49 @@ const navItems = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuth()
   const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   useInactivityTimeout()
+
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth > 768) setSidebarOpen(false)
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   return (
     <div className="layout">
+      <button className="hamburger-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú">
+        <Menu size={22} />
+      </button>
+
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            className="sidebar-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
       <motion.aside
-        className="sidebar"
+        className={`sidebar${sidebarOpen ? ' open' : ''}`}
         initial={{ x: -260 }}
         animate={{ x: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 25 }}
       >
+        <button className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú">
+          <X size={20} />
+        </button>
+
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <img src={logo} alt="DistriDentales" />

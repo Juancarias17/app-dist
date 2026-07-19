@@ -185,17 +185,17 @@ export function SalesPage() {
               {sortedSales.map((s) => (
                 <Fragment key={s.id}>
                   <motion.tr key={s.id} variants={rowVariants} initial="hidden" animate="visible" exit="hidden" layout>
-                    <td>{s.id}</td>
-                    <td style={{ fontWeight: 500 }}>{s.clientName}</td>
-                    <td>{s.saleDate}</td>
-                    <td>{s.description || '—'}</td>
-                    <td>
+                    <td data-label="ID">{s.id}</td>
+                    <td data-label="Cliente" style={{ fontWeight: 500 }}>{s.clientName}</td>
+                    <td data-label="Fecha">{s.saleDate}</td>
+                    <td data-label="Descripción">{s.description || '—'}</td>
+                    <td data-label="Items">
                       <button className="btn btn-sm btn-ghost" onClick={() => toggleExpand(s.id)}>
                         {expandedId === s.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         {s.items.length} producto{s.items.length !== 1 ? 's' : ''}
                       </button>
                     </td>
-                    <td style={{ fontWeight: 600 }}>${s.total.toLocaleString()}</td>
+                    <td data-label="Total" style={{ fontWeight: 600 }}>${s.total.toLocaleString()}</td>
                   </motion.tr>
 
                   <AnimatePresence>

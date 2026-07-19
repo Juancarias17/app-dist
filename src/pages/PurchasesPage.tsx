@@ -176,17 +176,17 @@ export function PurchasesPage() {
               {sortedPurchases.map((p) => (
                 <Fragment key={p.id}>
                   <motion.tr key={p.id} variants={rowVariants} initial="hidden" animate="visible" exit="hidden" layout>
-                    <td>{p.id}</td>
-                    <td style={{ fontWeight: 500 }}>{p.distributorName}</td>
-                    <td>{p.purchaseDate}</td>
-                    <td>{p.description || '—'}</td>
-                    <td>
+                    <td data-label="ID">{p.id}</td>
+                    <td data-label="Distribuidor" style={{ fontWeight: 500 }}>{p.distributorName}</td>
+                    <td data-label="Fecha">{p.purchaseDate}</td>
+                    <td data-label="Descripción">{p.description || '—'}</td>
+                    <td data-label="Items">
                       <button className="btn btn-sm btn-ghost" onClick={() => toggleExpand(p.id)}>
                         {expandedId === p.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         {p.items.length} producto{p.items.length !== 1 ? 's' : ''}
                       </button>
                     </td>
-                    <td style={{ fontWeight: 600 }}>${p.total.toLocaleString()}</td>
+                    <td data-label="Total" style={{ fontWeight: 600 }}>${p.total.toLocaleString()}</td>
                   </motion.tr>
 
                   <AnimatePresence>

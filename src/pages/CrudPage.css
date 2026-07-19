@@ -602,3 +602,136 @@
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .crud-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-sm {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.82rem;
+  }
+
+  .actions-cell {
+    gap: 0.5rem;
+  }
+
+  .actions-cell .btn-sm {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .modal-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 90vh;
+    margin: 0.5rem;
+  }
+
+  /* Table → cards */
+  .table-wrapper {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    overflow-x: visible;
+  }
+
+  .crud-table,
+  .crud-table thead,
+  .crud-table tbody,
+  .crud-table th,
+  .crud-table td,
+  .crud-table tr {
+    display: block;
+  }
+
+  .crud-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .crud-table tbody tr {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: var(--shadow-xs);
+  }
+
+  .crud-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--border-light);
+    text-align: right;
+    font-size: 0.85rem;
+  }
+
+  .crud-table td:last-child {
+    border-bottom: none;
+    padding-top: 0.5rem;
+  }
+
+  .crud-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    text-align: left;
+    flex: 1;
+  }
+
+  .crud-table td[data-label=""]::before {
+    display: none;
+  }
+
+  .batch-row td {
+    background: var(--bg-alt);
+    padding: 0.5rem 0 !important;
+  }
+
+  .batch-detail {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-bar input,
+  .filter-bar select {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .item-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .item-row input,
+  .item-row select {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .item-row span {
+    text-align: left;
+  }
+}

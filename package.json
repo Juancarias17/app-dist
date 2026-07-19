@@ -21,11 +21,8 @@
     "react-dom": "^19.2.3",
     "react-hot-toast": "^2.6.0",
     "react-is": "^19.2.7",
-    "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.1",
-    "recharts": "^2.13.0",
-    "redux": "^5.0.1",
-    "redux-thunk": "^3.1.0"
+    "recharts": "^2.13.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
@@ -51,7 +48,14 @@
       "public/**/*"
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "forceCodeSigning": false,
       "icon": "public/logo.ico"
     },

@@ -153,10 +153,10 @@ export function AreasPage() {
                     exit="hidden"
                     layout
                   >
-                    <td>{a.id}</td>
-                    <td style={{ fontWeight: 500 }}>{a.name}</td>
-                    <td>{(a.margen * 100).toFixed(0)}%</td>
-                    <td className="actions-cell">
+                    <td data-label="ID">{a.id}</td>
+                    <td data-label="Nombre" style={{ fontWeight: 500 }}>{a.name}</td>
+                    <td data-label="Margen">{(a.margen * 100).toFixed(0)}%</td>
+                    <td data-label="" className="actions-cell">
                       <button className="btn btn-sm" onClick={() => openEdit(a)} title="Editar">
                         <Edit3 size={14} />
                       </button>

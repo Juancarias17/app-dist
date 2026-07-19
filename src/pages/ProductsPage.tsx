@@ -212,15 +212,15 @@ export function ProductsPage() {
                   exit="hidden"
                   layout
                 >
-                  <td>{p.id}</td>
-                  <td style={{ fontWeight: 500 }}>{p.name}</td>
-                  <td>{p.areaName}</td>
-                  <td>${p.sellingPrice.toLocaleString()}</td>
-                  <td>{p.priceRecomendation ? `$${p.priceRecomendation.toLocaleString()}` : '—'}</td>
-                  <td>{p.iva ? 'Sí' : 'No'}</td>
-                  <td><span className={p.totalStock <= p.threshold ? 'stock-low' : ''}>{p.totalStock}</span></td>
-                  <td>{p.threshold}</td>
-                  <td className="actions-cell">
+                  <td data-label="ID">{p.id}</td>
+                  <td data-label="Nombre" style={{ fontWeight: 500 }}>{p.name}</td>
+                  <td data-label="Área">{p.areaName}</td>
+                  <td data-label="Precio Venta">${p.sellingPrice.toLocaleString()}</td>
+                  <td data-label="Precio Rec.">{p.priceRecomendation ? `$${p.priceRecomendation.toLocaleString()}` : '—'}</td>
+                  <td data-label="IVA">{p.iva ? 'Sí' : 'No'}</td>
+                  <td data-label="Stock"><span className={p.totalStock <= p.threshold ? 'stock-low' : ''}>{p.totalStock}</span></td>
+                  <td data-label="Umbral">{p.threshold}</td>
+                  <td data-label="" className="actions-cell">
                     <button className="btn btn-sm" onClick={() => showPrices(p)} title="Ver precios">
                       <DollarSign size={14} />
                     </button>

@@ -270,10 +270,10 @@ export function DistributorsPage() {
                     exit="hidden"
                     layout
                   >
-                    <td>{d.id}</td>
-                    <td style={{ fontWeight: 500 }}>{d.name}</td>
-                    <td>{d.contact || '—'}</td>
-                    <td className="actions-cell">
+                    <td data-label="ID">{d.id}</td>
+                    <td data-label="Nombre" style={{ fontWeight: 500 }}>{d.name}</td>
+                    <td data-label="Contacto">{d.contact || '—'}</td>
+                    <td data-label="" className="actions-cell">
                       {/* Botón para expandir precios */}
                       <button
                         className="btn btn-sm"

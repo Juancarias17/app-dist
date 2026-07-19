@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import DatePicker, { registerLocale } from 'react-datepicker'
 import { es } from 'date-fns/locale/es'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -26,7 +27,32 @@ function toDateString(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth <= 768)
+  useEffect(() => {
+    const onResize = () => setMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  return mobile
+}
+
 export function DatePickerField({ value, onChange, placeholder = 'Seleccionar fecha', minDate, maxDate, className }: DatePickerFieldProps) {
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return (
+      <input
+        type="date"
+        value={value}
+        min={minDate ? toDateString(minDate) : undefined}
+        max={maxDate ? toDateString(maxDate) : undefined}
+        onChange={(e) => e.target.value && onChange(e.target.value)}
+        className={`date-picker-input${className ? ` ${className}` : ''}`}
+      />
+    )
+  }
+
   return (
     <DatePicker
       selected={toLocalDate(value)}

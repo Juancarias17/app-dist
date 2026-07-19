@@ -1,34 +1,47 @@
-import { app as e, ipcMain as d, BrowserWindow as r, Menu as m } from "electron";
-import { fileURLToPath as w } from "node:url";
-import o from "node:path";
-e.disableHardwareAcceleration();
-e.commandLine.appendSwitch("disable-gpu");
-e.commandLine.appendSwitch("lang", "es");
-const s = o.dirname(w(import.meta.url));
-process.env.DIST = o.join(s, "../dist");
-process.env.VITE_PUBLIC = e.isPackaged ? process.env.DIST : o.join(process.env.DIST, "../public");
-let n;
-const a = process.env.VITE_DEV_SERVER_URL;
-function c() {
-  m.setApplicationMenu(null), n = new r({
+import { app, ipcMain, BrowserWindow, Menu } from "electron";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("lang", "es");
+const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
+process.env.DIST = path.join(__dirname$1, "../dist");
+process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(process.env.DIST, "../public");
+let win;
+const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+function createWindow() {
+  Menu.setApplicationMenu(null);
+  win = new BrowserWindow({
     width: 1200,
     height: 800,
-    autoHideMenuBar: !0,
-    icon: o.join(process.env.VITE_PUBLIC, "logo.ico"),
+    autoHideMenuBar: true,
+    icon: path.join(process.env.VITE_PUBLIC, "logo.ico"),
     webPreferences: {
-      preload: o.join(s, "preload.mjs")
+      preload: path.join(__dirname$1, "preload.mjs")
     }
-  }), a ? n.loadURL(a) : n.loadFile(o.join(process.env.DIST, "index.html"));
+  });
+  if (VITE_DEV_SERVER_URL) {
+    win.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    win.loadFile(path.join(process.env.DIST, "index.html"));
+  }
 }
-d.on("zoom", (u, l) => {
-  if (!n) return;
-  const i = n.webContents.getZoomFactor(), t = 0.1, p = l === "in" ? Math.min(i + t, 3) : Math.max(i - t, 0.3);
-  n.webContents.setZoomFactor(p);
+ipcMain.on("zoom", (_, direction) => {
+  if (!win) return;
+  const current = win.webContents.getZoomFactor();
+  const step = 0.1;
+  const next = direction === "in" ? Math.min(current + step, 3) : Math.max(current - step, 0.3);
+  win.webContents.setZoomFactor(next);
 });
-e.whenReady().then(c);
-e.on("window-all-closed", () => {
-  process.platform !== "darwin" && (e.quit(), n = null);
+app.whenReady().then(createWindow);
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+    win = null;
+  }
 });
-e.on("activate", () => {
-  r.getAllWindows().length === 0 && c();
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });

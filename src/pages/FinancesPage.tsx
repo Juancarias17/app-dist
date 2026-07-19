@@ -177,12 +177,12 @@ export function FinancesPage() {
             <AnimatePresence>
             {sortedTransactions.map((t) => (
               <motion.tr key={t.id} variants={rowVariants} initial="hidden" animate="visible" exit="hidden" layout>
-                <td>{t.id}</td>
-                <td><span className={`type-badge type-${t.type.toLowerCase()}`}>{typeLabel(t.type)}</span></td>
-                <td>{t.date}</td>
-                <td>{t.counterpart}</td>
-                <td style={{ fontWeight: 600 }}>${t.amount.toLocaleString()}</td>
-                <td>{t.description || '—'}</td>
+                <td data-label="ID">{t.id}</td>
+                <td data-label="Tipo"><span className={`type-badge type-${t.type.toLowerCase()}`}>{typeLabel(t.type)}</span></td>
+                <td data-label="Fecha">{t.date}</td>
+                <td data-label="Contraparte">{t.counterpart}</td>
+                <td data-label="Monto" style={{ fontWeight: 600 }}>${t.amount.toLocaleString()}</td>
+                <td data-label="Descripción">{t.description || '—'}</td>
               </motion.tr>
             ))}
             </AnimatePresence>
