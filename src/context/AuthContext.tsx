@@ -16,16 +16,14 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('lastActivity')
-    return null
+    return localStorage.getItem('token')
   })
 
   const logout = useCallback(() => {
     setToken(null)
     localStorage.removeItem('token')
     localStorage.removeItem('lastActivity')
-    window.location.href = '/login'
+    window.location.href = '/#/login'
   }, [])
 
   const refreshActivity = useCallback(() => {

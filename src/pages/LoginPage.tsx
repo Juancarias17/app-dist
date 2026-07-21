@@ -21,8 +21,13 @@ export function LoginPage() {
     try {
       await login({ username, password })
       navigate('/', { replace: true })
-    } catch {
-      setError('Usuario o contraseña incorrectos')
+    } catch (err: any) {
+      const msg = err?.response?.data?.message
+        || err?.response?.data?.error
+        || err?.message === 'Network Error'
+          ? 'No se pudo conectar con el servidor'
+          : 'Usuario o contraseña incorrectos'
+      setError(msg)
     } finally {
       setLoading(false)
     }

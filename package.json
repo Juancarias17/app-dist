@@ -5,12 +5,12 @@
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "vite",
-    "dev:electron": "vite --mode electron",
-    "build": "tsc && vite build",
-    "build:electron": "tsc && vite build && electron-builder",
-    "preview": "vite preview"
-  },
+  "dev": "vite",
+  "dev:electron": "vite --config vite.config.electron.ts",
+  "build": "tsc && vite build",
+  "build:electron": "tsc && vite build --config vite.config.electron.ts && electron-builder",
+  "preview": "vite preview"
+},
   "dependencies": {
     "axios": "^1.7.9",
     "date-fns": "^4.4.0",
