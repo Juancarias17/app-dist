@@ -145,12 +145,12 @@ export function ProductsPage() {
         <div className="table-wrapper">
           <table className="crud-table">
             <thead>
-              <tr><th>ID</th><th>Nombre</th><th>Área</th><th>Precio</th><th>Stock</th><th>Umbral</th><th>Acciones</th></tr>
+              <tr><th>Nombre</th><th>Área</th><th>Precio</th><th>Stock</th><th>Umbral</th><th>Acciones</th></tr>
             </thead>
             <tbody>
               {[1, 2, 3, 4, 5].map((i) => (
                 <tr key={i} className="skeleton-row">
-                  {[1, 2, 3, 4, 5, 6, 7].map((j) => (
+                  {[1, 2, 3, 4, 5, 6].map((j) => (
                     <td key={j}><div className="skeleton-cell" /></td>
                   ))}
                 </tr>
@@ -190,7 +190,6 @@ export function ProductsPage() {
         <table className="crud-table">
           <thead>
             <tr>
-              <SortableTh label="ID" sortKey="id" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Nombre" sortKey="name" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Área" sortKey="areaName" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Precio Venta" sortKey="sellingPrice" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
@@ -212,7 +211,6 @@ export function ProductsPage() {
                   exit="hidden"
                   layout
                 >
-                  <td data-label="ID">{p.id}</td>
                   <td data-label="Nombre" style={{ fontWeight: 500 }}>{p.name}</td>
                   <td data-label="Área">{p.areaName}</td>
                   <td data-label="Precio Venta">${p.sellingPrice.toLocaleString()}</td>
@@ -244,7 +242,7 @@ export function ProductsPage() {
             </AnimatePresence>
             {products.length === 0 && (
               <tr>
-                <td colSpan={9} className="empty-row">
+                <td colSpan={8} className="empty-row">
                   <Package size={40} style={{ opacity: 0.3, marginBottom: 8 }} />
                   <br />
                   No hay productos registrados

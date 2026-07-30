@@ -98,11 +98,11 @@ export function AreasPage() {
         <div className="crud-header"><h1 className="page-title">Áreas</h1></div>
         <div className="table-wrapper">
           <table className="crud-table">
-            <thead><tr><th>ID</th><th>Nombre</th><th>Margen</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Nombre</th><th>Margen</th><th>Acciones</th></tr></thead>
             <tbody>
               {[1, 2, 3].map((i) => (
                 <tr key={i} className="skeleton-row">
-                  {[1, 2, 3, 4].map((j) => <td key={j}><div className="skeleton-cell" /></td>)}
+                  {[1, 2, 3].map((j) => <td key={j}><div className="skeleton-cell" /></td>)}
                 </tr>
               ))}
             </tbody>
@@ -136,7 +136,6 @@ export function AreasPage() {
         <table className="crud-table">
           <thead>
             <tr>
-              <SortableTh label="ID" sortKey="id" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Nombre" sortKey="name" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Margen" sortKey="margen" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <th>Acciones</th>
@@ -153,7 +152,6 @@ export function AreasPage() {
                     exit="hidden"
                     layout
                   >
-                    <td data-label="ID">{a.id}</td>
                     <td data-label="Nombre" style={{ fontWeight: 500 }}>{a.name}</td>
                     <td data-label="Margen">{(a.margen * 100).toFixed(0)}%</td>
                     <td data-label="" className="actions-cell">
@@ -170,7 +168,7 @@ export function AreasPage() {
             </AnimatePresence>
             {sortedAreas.length === 0 && (
               <tr>
-                <td colSpan={4} className="empty-row">
+                <td colSpan={3} className="empty-row">
                   <Layers size={40} style={{ opacity: 0.3, marginBottom: 8 }} />
                   <br />
                   No hay áreas registradas

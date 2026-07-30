@@ -222,9 +222,9 @@ export function DistributorsPage() {
         <div className="crud-header"><h1 className="page-title">Distribuidores</h1></div>
         <div className="table-wrapper">
           <table className="crud-table">
-            <thead><tr><th>ID</th><th>Nombre</th><th>Contacto</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Nombre</th><th>Contacto</th><th>Acciones</th></tr></thead>
             <tbody>{[1, 2, 3].map((i) => (
-              <tr key={i} className="skeleton-row"><td colSpan={4}><div className="skeleton-cell" /></td></tr>
+              <tr key={i} className="skeleton-row"><td colSpan={3}><div className="skeleton-cell" /></td></tr>
             ))}</tbody>
           </table>
         </div>
@@ -255,7 +255,7 @@ export function DistributorsPage() {
       <div className="table-wrapper">
         <table className="crud-table">
           <thead>
-            <tr><SortableTh label="ID" sortKey="id" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} /><SortableTh label="Nombre" sortKey="name" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} /><SortableTh label="Contacto" sortKey="contact" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} /><th>Acciones</th></tr>
+            <tr><SortableTh label="Nombre" sortKey="name" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} /><SortableTh label="Contacto" sortKey="contact" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} /><th>Acciones</th></tr>
           </thead>
           <tbody>
             <AnimatePresence>
@@ -270,7 +270,6 @@ export function DistributorsPage() {
                     exit="hidden"
                     layout
                   >
-                    <td data-label="ID">{d.id}</td>
                     <td data-label="Nombre" style={{ fontWeight: 500 }}>{d.name}</td>
                     <td data-label="Contacto">{d.contact || '—'}</td>
                     <td data-label="" className="actions-cell">
@@ -302,7 +301,7 @@ export function DistributorsPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                       >
-                        <td colSpan={4} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
+                        <td colSpan={3} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
                           <div style={{ padding: '1rem 1.5rem' }}>
 
                             {/* Header del panel */}
@@ -373,7 +372,7 @@ export function DistributorsPage() {
 
             {distributors.length === 0 && (
               <tr>
-                <td colSpan={4} className="empty-row">
+                <td colSpan={3} className="empty-row">
                   <Truck size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />
                   No hay distribuidores registrados
                 </td>

@@ -138,8 +138,8 @@ export function SalesPage() {
         <div className="crud-header"><h1 className="page-title">Ventas</h1></div>
         <div className="table-wrapper">
           <table className="crud-table">
-            <thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Items</th><th>Total</th></tr></thead>
-            <tbody>{[1, 2, 3].map((i) => <tr key={i} className="skeleton-row"><td colSpan={5}><div className="skeleton-cell" /></td></tr>)}</tbody>
+            <thead><tr><th>Cliente</th><th>Fecha</th><th>Items</th><th>Total</th></tr></thead>
+            <tbody>{[1, 2, 3].map((i) => <tr key={i} className="skeleton-row"><td colSpan={4}><div className="skeleton-cell" /></td></tr>)}</tbody>
           </table>
         </div>
       </div>
@@ -173,7 +173,6 @@ export function SalesPage() {
       <div className="table-wrapper">
         <table className="crud-table">
           <thead><tr>
-            <SortableTh label="ID" sortKey="id" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <SortableTh label="Cliente" sortKey="clientName" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <SortableTh label="Fecha" sortKey="saleDate" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <SortableTh label="Descripción" sortKey="description" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
@@ -185,7 +184,6 @@ export function SalesPage() {
               {sortedSales.map((s) => (
                 <Fragment key={s.id}>
                   <motion.tr key={s.id} variants={rowVariants} initial="hidden" animate="visible" exit="hidden" layout>
-                    <td data-label="ID">{s.id}</td>
                     <td data-label="Cliente" style={{ fontWeight: 500 }}>{s.clientName}</td>
                     <td data-label="Fecha">{s.saleDate}</td>
                     <td data-label="Descripción">{s.description || '—'}</td>
@@ -206,7 +204,7 @@ export function SalesPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                       >
-                        <td colSpan={6} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
+                        <td colSpan={5} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
                           <div style={{ padding: '1rem 1.5rem' }}>
                             <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)', marginBottom: '0.75rem' }}>
                               Productos de la venta #{s.id}
@@ -239,7 +237,7 @@ export function SalesPage() {
                 </Fragment>
               ))}
             </AnimatePresence>
-            {sales.length === 0 && <tr><td colSpan={6} className="empty-row"><DollarSign size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay ventas registradas</td></tr>}
+            {sales.length === 0 && <tr><td colSpan={5} className="empty-row"><DollarSign size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay ventas registradas</td></tr>}
           </tbody>
         </table>
       </div>

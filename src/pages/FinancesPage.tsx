@@ -166,7 +166,6 @@ export function FinancesPage() {
       <div className="table-wrapper">
         <table className="crud-table">
           <thead><tr>
-            <SortableTh label="ID" sortKey="id" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <SortableTh label="Tipo" sortKey="type" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <SortableTh label="Fecha" sortKey="date" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <SortableTh label="Contraparte" sortKey="counterpart" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
@@ -177,7 +176,6 @@ export function FinancesPage() {
             <AnimatePresence>
             {sortedTransactions.map((t) => (
               <motion.tr key={t.id} variants={rowVariants} initial="hidden" animate="visible" exit="hidden" layout>
-                <td data-label="ID">{t.id}</td>
                 <td data-label="Tipo"><span className={`type-badge type-${t.type.toLowerCase()}`}>{typeLabel(t.type)}</span></td>
                 <td data-label="Fecha">{t.date}</td>
                 <td data-label="Contraparte">{t.counterpart}</td>
@@ -187,7 +185,7 @@ export function FinancesPage() {
             ))}
             </AnimatePresence>
             {sortedTransactions.length === 0 && (
-              <tr><td colSpan={6} className="empty-row"><Landmark size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay transacciones registradas</td></tr>
+              <tr><td colSpan={5} className="empty-row"><Landmark size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay transacciones registradas</td></tr>
             )}
           </tbody>
         </table>

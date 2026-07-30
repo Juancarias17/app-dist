@@ -27,20 +27,20 @@ function toDateString(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
-function useIsMobile() {
-  const [mobile, setMobile] = useState(() => window.innerWidth <= 768)
+function useIsTabletOrMobile() {
+  const [isSmall, setIsSmall] = useState(() => window.innerWidth <= 1024)
   useEffect(() => {
-    const onResize = () => setMobile(window.innerWidth <= 768)
+    const onResize = () => setIsSmall(window.innerWidth <= 1024)
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
-  return mobile
+  return isSmall
 }
 
 export function DatePickerField({ value, onChange, placeholder = 'Seleccionar fecha', minDate, maxDate, className }: DatePickerFieldProps) {
-  const isMobile = useIsMobile()
+  const isSmall = useIsTabletOrMobile()
 
-  if (isMobile) {
+  if (isSmall) {
     return (
       <input
         type="date"
@@ -67,6 +67,7 @@ export function DatePickerField({ value, onChange, placeholder = 'Seleccionar fe
       showMonthDropdown
       showYearDropdown
       dropdownMode="select"
+      popperPlacement="bottom-start"
     />
   )
 }

@@ -124,8 +124,8 @@ export function PurchasesPage() {
         <div className="crud-header"><h1 className="page-title">Compras</h1></div>
         <div className="table-wrapper">
           <table className="crud-table">
-            <thead><tr><th>ID</th><th>Distribuidor</th><th>Fecha</th><th>Items</th><th>Total</th></tr></thead>
-            <tbody>{[1, 2, 3].map((i) => <tr key={i} className="skeleton-row"><td colSpan={5}><div className="skeleton-cell" /></td></tr>)}</tbody>
+            <thead><tr><th>Distribuidor</th><th>Fecha</th><th>Items</th><th>Total</th></tr></thead>
+            <tbody>{[1, 2, 3].map((i) => <tr key={i} className="skeleton-row"><td colSpan={4}><div className="skeleton-cell" /></td></tr>)}</tbody>
           </table>
         </div>
       </div>
@@ -163,7 +163,6 @@ export function PurchasesPage() {
         <table className="crud-table">
           <thead>
             <tr>
-              <SortableTh label="ID" sortKey="id" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Distribuidor" sortKey="distributorName" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Fecha" sortKey="purchaseDate" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Descripción" sortKey="description" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
@@ -176,7 +175,6 @@ export function PurchasesPage() {
               {sortedPurchases.map((p) => (
                 <Fragment key={p.id}>
                   <motion.tr key={p.id} variants={rowVariants} initial="hidden" animate="visible" exit="hidden" layout>
-                    <td data-label="ID">{p.id}</td>
                     <td data-label="Distribuidor" style={{ fontWeight: 500 }}>{p.distributorName}</td>
                     <td data-label="Fecha">{p.purchaseDate}</td>
                     <td data-label="Descripción">{p.description || '—'}</td>
@@ -197,7 +195,7 @@ export function PurchasesPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                       >
-                        <td colSpan={6} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
+                        <td colSpan={5} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
                           <div style={{ padding: '1rem 1.5rem' }}>
                             <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)', marginBottom: '0.75rem' }}>
                               Productos de la compra #{p.id}
@@ -230,7 +228,7 @@ export function PurchasesPage() {
                 </Fragment>
               ))}
             </AnimatePresence>
-            {purchases.length === 0 && <tr><td colSpan={6} className="empty-row"><ShoppingCart size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay compras registradas</td></tr>}
+            {purchases.length === 0 && <tr><td colSpan={5} className="empty-row"><ShoppingCart size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay compras registradas</td></tr>}
           </tbody>
         </table>
       </div>

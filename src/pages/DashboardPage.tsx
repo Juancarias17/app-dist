@@ -123,6 +123,8 @@ function formatCompact(n: number): string {
 export function DashboardPage() {
   const [desde, setDesde] = useState(monthsAgoISO(6))
   const [hasta, setHasta] = useState(todayISO())
+  const [tempDesde, setTempDesde] = useState(desde)
+  const [tempHasta, setTempHasta] = useState(hasta)
   const [loading, setLoading] = useState(true)
 
   const [productCount, setProductCount] = useState<number | null>(null)
@@ -228,15 +230,24 @@ export function DashboardPage() {
 
   useEffect(() => {
     fetchData(desde, hasta)
-  }, [fetchData, desde, hasta])
+  }, [fetchData])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchData(desde, hasta) }, [])
 
   const applyPreset = (months: number) => {
-    setDesde(monthsAgoISO(months))
-    setHasta(todayISO())
+    const d = monthsAgoISO(months)
+    const h = todayISO()
+    setDesde(d)
+    setHasta(h)
+    setTempDesde(d)
+    setTempHasta(h)
+    fetchData(d, h)
   }
 
   const applyCustom = () => {
-    fetchData(desde, hasta)
+    setDesde(tempDesde)
+    setHasta(tempHasta)
+    fetchData(tempDesde, tempHasta)
   }
 
   const cards = [
@@ -292,9 +303,9 @@ export function DashboardPage() {
           </div>
           <div className="date-range">
             <Calendar size={16} className="date-icon" />
-            <DatePickerField value={desde} onChange={setDesde} className="date-picker-dashboard" />
+            <DatePickerField value={tempDesde} onChange={setTempDesde} className="date-picker-dashboard" />
             <span className="date-sep">—</span>
-            <DatePickerField value={hasta} onChange={setHasta} className="date-picker-dashboard" />
+            <DatePickerField value={tempHasta} onChange={setTempHasta} className="date-picker-dashboard" />
             <button className="btn btn-sm btn-primary" onClick={applyCustom}>
               Aplicar
             </button>

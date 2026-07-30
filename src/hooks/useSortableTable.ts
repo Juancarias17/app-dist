@@ -21,8 +21,8 @@ function compareValues(a: unknown, b: unknown): number {
 }
 
 export function useSortableTable<T>(data: T[]) {
-  const [sortKey, setSortKey] = useState<string | null>(null)
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [sortKey, setSortKey] = useState<string | null>('id')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const toggleSort = (key: string) => {
     if (sortKey === key) {
