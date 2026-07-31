@@ -8,6 +8,7 @@ interface AuthContextType {
   token: string | null
   login: (data: LoginRequest) => Promise<void>
   logout: () => void
+  refreshToken: () => Promise<void>
   isAuthenticated: boolean
   validating: boolean
   refreshActivity: () => void
@@ -53,12 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(res.token)
   }, [refreshActivity])
 
+  const refreshToken = useCallback(async () => {
+    const res = await authService.refresh()
+    localStorage.setItem('token', res.token)
+    setToken(res.token)
+  }, [])
+
   return (
     <AuthContext.Provider
       value={{
         token,
         login,
         logout,
+        refreshToken,
         isAuthenticated: !!token,
         validating,
         refreshActivity,

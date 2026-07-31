@@ -5,6 +5,9 @@ export const authService = {
   login: (data: LoginRequest) =>
     api.post<LoginResponse>('/auth/login', data).then((r) => r.data),
 
+  refresh: () =>
+    api.post<LoginResponse>('/auth/refresh').then((r) => r.data),
+
   validate: () =>
     api.get('/api/areas').then((r) => r.data),
 }

@@ -175,7 +175,6 @@ export function DistributorsPage() {
 
     try {
       if (editingPrice) {
-        // Crea un registro nuevo con el precio actualizado (histórico — acordado en el diseño)
         const updated = await distributorPricesService.update(editingPrice.id, { price: priceForm.price })
         setPrices((prev) => ({
           ...prev,
@@ -434,7 +433,7 @@ export function DistributorsPage() {
           {editingPrice && (
             <div className="form-group">
               <label>Producto</label>
-              {/* Solo lectura al editar: el producto no cambia, se crea un registro nuevo */}
+              {/* Solo lectura al editar: el producto no cambia */}
               <input value={editingPrice.productName} disabled style={{ opacity: 0.6 }} />
             </div>
           )}
@@ -448,12 +447,6 @@ export function DistributorsPage() {
               min={0}
             />
           </div>
-
-          {editingPrice && (
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-              Se creará un nuevo registro con el precio actualizado (el historial anterior se conserva).
-            </p>
-          )}
 
           <button className="btn btn-primary" onClick={handleSavePrice} disabled={savingPrice}>
             {savingPrice ? 'Guardando...' : editingPrice ? 'Actualizar Precio' : 'Registrar Precio'}

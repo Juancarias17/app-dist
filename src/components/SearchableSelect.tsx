@@ -23,9 +23,12 @@ function normalize(s: string) {
 export function SearchableSelect({ options, value, onChange, placeholder = 'Seleccione', className }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0, openUp: false })
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0, maxHeight: 280 })
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const rafRef = useRef<number | undefined>(undefined)
+
+  const [isTouch] = useState(() => window.matchMedia('(pointer: coarse)').matches)
 
   const selected = options.find((o) => o.value === value)
 
@@ -47,18 +50,28 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
   const grouped = filtered.length > 1 || filtered.some((g) => g.items.length > 1)
   const totalItems = filtered.reduce((acc, g) => acc + g.items.length, 0)
 
-  const openDropdown = () => {
+  const computePosition = () => {
     const rect = triggerRef.current!.getBoundingClientRect()
-    const openUp = window.innerHeight - rect.bottom < 220
-    const height = Math.min(280, rect.top - 8)
-    setPos({
-      top: openUp ? rect.top - height : rect.bottom,
+    const vh = window.visualViewport?.height ?? window.innerHeight
+    const top = rect.bottom + 4
+    const maxHeight = Math.min(280, Math.max(140, vh - top - 8))
+    return {
+      top,
       left: rect.left,
       width: rect.width,
-      openUp,
-    })
+      maxHeight,
+    }
+  }
+
+  const openDropdown = () => {
+    setPos(computePosition())
     setQuery('')
     setOpen(true)
+  }
+
+  const reposition = () => {
+    if (!triggerRef.current) return
+    setPos(computePosition())
   }
 
   const select = (opt: SearchableOption) => {
@@ -70,18 +83,30 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
     const onDocClick = (e: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
     }
-    const onScroll = (e: Event) => {
-      if (rootRef.current && rootRef.current.contains(e.target as Node)) return
-      setOpen(false)
+    const onFrame = () => {
+      rafRef.current = undefined
+      reposition()
     }
-    const onResize = () => setOpen(false)
+    const scheduleReposition = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(onFrame)
+    }
+    const onExternalScroll = (e: Event) => {
+      if (rootRef.current && rootRef.current.contains(e.target as Node)) return
+      scheduleReposition()
+    }
+    const onResize = () => scheduleReposition()
     document.addEventListener('mousedown', onDocClick)
-    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('scroll', onExternalScroll, true)
     window.addEventListener('resize', onResize)
+    const vv = window.visualViewport
+    if (vv) vv.addEventListener('resize', onResize)
     return () => {
       document.removeEventListener('mousedown', onDocClick)
-      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('scroll', onExternalScroll, true)
       window.removeEventListener('resize', onResize)
+      if (vv) vv.removeEventListener('resize', onResize)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
   }, [])
 
@@ -101,19 +126,19 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
 
       {open && (
         <div
-          className={`searchable-select-dropdown${pos.openUp ? ' open-up' : ''}`}
+          className="searchable-select-dropdown"
           style={{ top: pos.top, left: pos.left, width: pos.width }}
         >
           <div className="searchable-select-search">
             <Search size={14} />
             <input
-              autoFocus
+              autoFocus={!isTouch}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar..."
             />
           </div>
-          <div className="searchable-select-list">
+          <div className="searchable-select-list" style={{ maxHeight: pos.maxHeight }}>
             {totalItems === 0 ? (
               <div className="searchable-select-empty">Sin resultados</div>
             ) : grouped ? (

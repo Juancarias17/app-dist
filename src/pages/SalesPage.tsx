@@ -253,10 +253,6 @@ export function SalesPage() {
             <label>Fecha</label>
             <DatePickerField value={form.saleDate} onChange={(v) => setForm({ ...form, saleDate: v })} />
           </div>
-          <div className="form-group">
-            <label>Descripción</label>
-            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Opcional" />
-          </div>
 
           <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Productos (lotes disponibles)</label>
           {form.items.map((item, idx) => (
@@ -280,6 +276,12 @@ export function SalesPage() {
             </div>
           ))}
           <button className="btn btn-sm add-item-btn" onClick={addItem}>+ Agregar Producto</button>
+
+          <div className="form-group">
+            <label>Descripción</label>
+            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Opcional" />
+          </div>
+
           <div className="total-row">Total: ${total.toLocaleString()}</div>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Registrando...' : 'Registrar Venta'}

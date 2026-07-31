@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { useTokenRefresh } from './hooks/useTokenRefresh'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
@@ -16,6 +17,8 @@ import './App.css'
 
 function AppRoutes() {
   const { validating } = useAuth()
+
+  useTokenRefresh()
 
   if (validating) {
     return (
