@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import { authService } from '../services/auth.service'
 import type { LoginRequest } from '../types'
 
@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (data: LoginRequest) => Promise<void>
   logout: () => void
   isAuthenticated: boolean
+  validating: boolean
   refreshActivity: () => void
 }
 
@@ -18,6 +19,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem('token')
   })
+  const [validating, setValidating] = useState(() => !!localStorage.getItem('token'))
+
+  useEffect(() => {
+    if (!token) {
+      setValidating(false)
+      return
+    }
+    authService.validate()
+      .catch(() => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('lastActivity')
+        setToken(null)
+      })
+      .finally(() => setValidating(false))
+  }, [])
 
   const logout = useCallback(() => {
     setToken(null)
@@ -44,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAuthenticated: !!token,
+        validating,
         refreshActivity,
       }}
     >

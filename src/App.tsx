@@ -1,6 +1,6 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
@@ -13,6 +13,44 @@ import { FinancesPage } from './pages/FinancesPage'
 import { DistributorsPage } from './pages/DistributorsPage'
 import { AreasPage } from './pages/AreasPage'
 import './App.css'
+
+function AppRoutes() {
+  const { validating } = useAuth()
+
+  if (validating) {
+    return (
+      <div className="app-splash">
+        <div className="app-splash-spinner" />
+        <p>Cargando...</p>
+      </div>
+    )
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/productos" element={<ProductsPage />} />
+                <Route path="/inventario" element={<InventoryPage />} />
+                <Route path="/compras" element={<PurchasesPage />} />
+                <Route path="/ventas" element={<SalesPage />} />
+                <Route path="/finanzas" element={<FinancesPage />} />
+                <Route path="/distribuidores" element={<DistributorsPage />} />
+                <Route path="/areas" element={<AreasPage />} />
+              </Routes>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  )
+}
 
 function App() {
   return (
@@ -38,28 +76,7 @@ function App() {
             },
           }}
         />
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<DashboardPage />} />
-                    <Route path="/productos" element={<ProductsPage />} />
-                    <Route path="/inventario" element={<InventoryPage />} />
-                    <Route path="/compras" element={<PurchasesPage />} />
-                    <Route path="/ventas" element={<SalesPage />} />
-                    <Route path="/finanzas" element={<FinancesPage />} />
-                    <Route path="/distribuidores" element={<DistributorsPage />} />
-                    <Route path="/areas" element={<AreasPage />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        <AppRoutes />
       </AuthProvider>
     </HashRouter>
   )
