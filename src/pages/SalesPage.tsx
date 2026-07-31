@@ -6,6 +6,7 @@ import { salesService } from '../services/sales.service'
 import { inventoryService } from '../services/inventory.service'
 import { Modal } from '../components/Modal'
 import { NumberInput } from '../components/NumberInput'
+import { SearchableSelect } from '../components/SearchableSelect'
 import { SortableTh } from '../components/SortableTh'
 import { useSortableTable } from '../hooks/useSortableTable'
 import { DatePickerField } from '../components/DatePickerField'
@@ -260,12 +261,16 @@ export function SalesPage() {
           <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Productos (lotes disponibles)</label>
           {form.items.map((item, idx) => (
             <div key={idx} className="item-row">
-              <select value={item.inventoryBatchId} onChange={(e) => updateItem(idx, 'inventoryBatchId', Number(e.target.value))}>
-                <option value={0}>Seleccione lote</option>
-                {availableBatches.map((b) => (
-                  <option key={b.id} value={b.id}>{b.productName} - {batchLabels[b.id] ?? `Lote #${b.id}`} (Stock: {b.quantity})</option>
-                ))}
-              </select>
+              <SearchableSelect
+                options={availableBatches.map((b) => ({
+                  value: b.id,
+                  label: `${batchLabels[b.id] ?? `Lote #${b.id}`} (Stock: ${b.quantity})`,
+                  group: b.productName,
+                }))}
+                value={item.inventoryBatchId}
+                onChange={(v) => updateItem(idx, 'inventoryBatchId', v)}
+                placeholder="Seleccione lote"
+              />
               <NumberInput placeholder="Cant" value={item.quantity} min={1} onChange={(v) => updateItem(idx, 'quantity', v)} />
               <NumberInput step="0.01" placeholder="Precio" value={item.price} onChange={(v) => updateItem(idx, 'price', v)} />
               <span>${(item.quantity * item.price).toLocaleString()}</span>

@@ -7,6 +7,7 @@ import { distributorsService } from '../services/distributors.service'
 import { productsService } from '../services/products.service'
 import { Modal } from '../components/Modal'
 import { NumberInput } from '../components/NumberInput'
+import { SearchableSelect } from '../components/SearchableSelect'
 import { SortableTh } from '../components/SortableTh'
 import { useSortableTable } from '../hooks/useSortableTable'
 import { DatePickerField } from '../components/DatePickerField'
@@ -259,10 +260,12 @@ export function PurchasesPage() {
             return (
               <div key={idx} className="item-group">
                 <div className="item-row">
-                  <select value={item.productId} onChange={(e) => updateItem(idx, 'productId', Number(e.target.value))}>
-                    <option value={0}>Seleccione</option>
-                    {products.map((pr) => <option key={pr.id} value={pr.id}>{pr.name}</option>)}
-                  </select>
+                  <SearchableSelect
+                    options={products.map((pr) => ({ value: pr.id, label: pr.name, group: pr.areaName }))}
+                    value={item.productId}
+                    onChange={(v) => updateItem(idx, 'productId', v)}
+                    placeholder="Seleccione producto"
+                  />
                   <NumberInput placeholder="Cant" value={item.quantity} min={1} onChange={(v) => updateItem(idx, 'quantity', v)} />
                   <NumberInput step="0.01" placeholder="Precio" value={item.price} onChange={(v) => updateItem(idx, 'price', v)} />
                   <span>${(item.quantity * item.price).toLocaleString()}</span>

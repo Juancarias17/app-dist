@@ -8,6 +8,7 @@ import { productsService } from '../services/products.service'
 import { Modal } from '../components/Modal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { NumberInput } from '../components/NumberInput'
+import { SearchableSelect } from '../components/SearchableSelect'
 import { SortableTh } from '../components/SortableTh'
 import { useSortableTable } from '../hooks/useSortableTable'
 import type {
@@ -421,15 +422,12 @@ export function DistributorsPage() {
           {!editingPrice && (
             <div className="form-group">
               <label>Producto</label>
-              <select
+              <SearchableSelect
+                options={products.map((p) => ({ value: p.id, label: p.name, group: p.areaName }))}
                 value={priceForm.productId}
-                onChange={(e) => setPriceForm({ ...priceForm, productId: Number(e.target.value) })}
-              >
-                <option value={0} disabled>Selecciona un producto</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+                onChange={(v) => setPriceForm({ ...priceForm, productId: v })}
+                placeholder="Selecciona un producto"
+              />
             </div>
           )}
 
