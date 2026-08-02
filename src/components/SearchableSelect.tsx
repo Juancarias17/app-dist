@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, Fragment } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Search } from 'lucide-react'
 import './SearchableSelect.css'
 
@@ -26,6 +27,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0, maxHeight: 280 })
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | undefined>(undefined)
 
   const [isTouch] = useState(() => window.matchMedia('(pointer: coarse)').matches)
@@ -81,7 +83,9 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      const inside = rootRef.current?.contains(target) || dropdownRef.current?.contains(target)
+      if (!inside) setOpen(false)
     }
     const onFrame = () => {
       rafRef.current = undefined
@@ -124,54 +128,57 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
         <ChevronDown size={16} className={`searchable-select-chevron${open ? ' open' : ''}`} />
       </button>
 
-      {open && (
-        <div
-          className="searchable-select-dropdown"
-          style={{ top: pos.top, left: pos.left, width: pos.width }}
-        >
-          <div className="searchable-select-search">
-            <Search size={14} />
-            <input
-              autoFocus={!isTouch}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar..."
-            />
-          </div>
-          <div className="searchable-select-list" style={{ maxHeight: pos.maxHeight }}>
-            {totalItems === 0 ? (
-              <div className="searchable-select-empty">Sin resultados</div>
-            ) : grouped ? (
-              filtered.map((g) => (
-                <Fragment key={g.group}>
-                  <div className="searchable-select-group">{g.group || 'Otros'}</div>
-                  {g.items.map((o) => (
-                    <button
-                      key={o.value}
-                      type="button"
-                      className={`searchable-select-option${o.value === value ? ' selected' : ''}`}
-                      onClick={() => select(o)}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
-                </Fragment>
-              ))
-            ) : (
-              filtered[0]?.items.map((o) => (
-                <button
-                  key={o.value}
-                  type="button"
-                  className={`searchable-select-option${o.value === value ? ' selected' : ''}`}
-                  onClick={() => select(o)}
-                >
-                  {o.label}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="searchable-select-dropdown"
+            style={{ top: pos.top, left: pos.left, width: pos.width }}
+          >
+            <div className="searchable-select-search">
+              <Search size={14} />
+              <input
+                autoFocus={!isTouch}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Buscar..."
+              />
+            </div>
+            <div className="searchable-select-list" style={{ maxHeight: pos.maxHeight }}>
+              {totalItems === 0 ? (
+                <div className="searchable-select-empty">Sin resultados</div>
+              ) : grouped ? (
+                filtered.map((g) => (
+                  <Fragment key={g.group}>
+                    <div className="searchable-select-group">{g.group || 'Otros'}</div>
+                    {g.items.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        className={`searchable-select-option${o.value === value ? ' selected' : ''}`}
+                        onClick={() => select(o)}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </Fragment>
+                ))
+              ) : (
+                filtered[0]?.items.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    className={`searchable-select-option${o.value === value ? ' selected' : ''}`}
+                    onClick={() => select(o)}
+                  >
+                    {o.label}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }

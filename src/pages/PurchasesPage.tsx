@@ -1,4 +1,4 @@
-import { useEffect, useState, Fragment } from 'react'
+import { useEffect, useRef, useState, Fragment } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, ShoppingCart, X, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -50,8 +50,10 @@ export function PurchasesPage() {
   const [saving, setSaving] = useState(false)
 
   const [filterDistributor, setFilterDistributor] = useState<number | undefined>()
+  const [filterProduct, setFilterProduct] = useState('')
   const [filterDesde, setFilterDesde] = useState('')
   const [filterHasta, setFilterHasta] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
@@ -59,11 +61,12 @@ export function PurchasesPage() {
 
   const { sortKey, sortDir, toggleSort, sortedData: sortedPurchases } = useSortableTable(purchases)
 
-  const fetchPurchases = () => {
-    const params: { distributorId?: number; desde?: string; hasta?: string } = {}
-    if (filterDistributor) params.distributorId = filterDistributor
-    if (filterDesde) params.desde = filterDesde
-    if (filterHasta) params.hasta = filterHasta
+  const fetchPurchases = (distributorId?: number, product?: string, desde?: string, hasta?: string) => {
+    const params: { distributorId?: number; productName?: string; desde?: string; hasta?: string } = {}
+    if (distributorId) params.distributorId = distributorId
+    if (product) params.productName = product
+    if (desde) params.desde = desde
+    if (hasta) params.hasta = hasta
     purchasesService.getAll(params).then(setPurchases).catch(() => toast.error('Error al cargar compras'))
   }
 
@@ -74,7 +77,13 @@ export function PurchasesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { fetchPurchases() }, [filterDistributor, filterDesde, filterHasta])
+  useEffect(() => {
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      fetchPurchases(filterDistributor, filterProduct, filterDesde, filterHasta)
+    }, filterProduct ? 300 : 0)
+    return () => clearTimeout(debounceRef.current)
+  }, [filterDistributor, filterProduct, filterDesde, filterHasta])
 
   useEffect(() => {
     setTotal(form.items.reduce((acc, item) => acc + item.quantity * item.price, 0))
@@ -149,6 +158,10 @@ export function PurchasesPage() {
             <option value="">Todos</option>
             {distributors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
+        </div>
+        <div className="form-group">
+          <label>Producto</label>
+          <input value={filterProduct} onChange={(e) => setFilterProduct(e.target.value)} placeholder="Buscar producto" />
         </div>
         <div className="form-group">
           <label>Desde</label>

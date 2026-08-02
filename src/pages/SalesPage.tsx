@@ -46,14 +46,16 @@ export function SalesPage() {
   const { sortKey, sortDir, toggleSort, sortedData: sortedSales } = useSortableTable(sales)
 
   const [filterClient, setFilterClient] = useState('')
+  const [filterProduct, setFilterProduct] = useState('')
   const [filterDesde, setFilterDesde] = useState('')
   const [filterHasta, setFilterHasta] = useState('')
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  const fetchSales = (client?: string, desde?: string, hasta?: string) => {
-    const params: { clientName?: string; desde?: string; hasta?: string } = {}
+  const fetchSales = (client?: string, product?: string, desde?: string, hasta?: string) => {
+    const params: { clientName?: string; productName?: string; desde?: string; hasta?: string } = {}
     if (client) params.clientName = client
+    if (product) params.productName = product
     if (desde) params.desde = desde
     if (hasta) params.hasta = hasta
     salesService.getAll(params).then(setSales).catch(() => toast.error('Error al cargar ventas'))
@@ -69,10 +71,10 @@ export function SalesPage() {
   useEffect(() => {
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      fetchSales(filterClient, filterDesde, filterHasta)
+      fetchSales(filterClient, filterProduct, filterDesde, filterHasta)
     }, 300)
     return () => clearTimeout(debounceRef.current)
-  }, [filterClient, filterDesde, filterHasta])
+  }, [filterClient, filterProduct, filterDesde, filterHasta])
 
   useEffect(() => {
     setTotal(form.items.reduce((acc, item) => acc + item.quantity * item.price, 0))
@@ -160,6 +162,10 @@ export function SalesPage() {
         <div className="form-group">
           <label>Cliente</label>
           <input value={filterClient} onChange={(e) => setFilterClient(e.target.value)} placeholder="Nombre del cliente" />
+        </div>
+        <div className="form-group">
+          <label>Producto</label>
+          <input value={filterProduct} onChange={(e) => setFilterProduct(e.target.value)} placeholder="Buscar producto" />
         </div>
         <div className="form-group">
           <label>Desde</label>

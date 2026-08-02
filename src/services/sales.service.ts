@@ -2,7 +2,7 @@ import api from './api'
 import type { SaleResponse, SaleCreateRequest } from '../types'
 
 export const salesService = {
-  getAll: (params?: { clientName?: string; desde?: string; hasta?: string }) =>
+  getAll: (params?: { clientName?: string; productName?: string; desde?: string; hasta?: string }) =>
     api.get<SaleResponse[]>('/api/sales', { params }).then((r) => r.data),
 
   getById: (id: number) =>
