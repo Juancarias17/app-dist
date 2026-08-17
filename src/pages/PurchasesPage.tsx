@@ -14,7 +14,6 @@ import { DatePickerField } from '../components/DatePickerField'
 import type {
   PurchaseResponse,
   PurchaseCreateRequest,
-  PurchaseItemRequest,
   DistributorResponse,
   ProductResponse,
   DistributorPriceResponse,
@@ -58,6 +57,8 @@ export function PurchasesPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   const [productPrices, setProductPrices] = useState<Record<number, DistributorPriceResponse[]>>({})
+  const [priceModes, setPriceModes] = useState<Record<number, 'unit' | 'total'>>({})
+  const [itemTotals, setItemTotals] = useState<Record<number, number>>({})
 
   const { sortKey, sortDir, toggleSort, sortedData: sortedPurchases } = useSortableTable(purchases)
 
@@ -101,6 +102,8 @@ export function PurchasesPage() {
 
   const openCreate = () => {
     setForm({ ...emptyForm, distributorId: distributors[0]?.id ?? 0 })
+    setPriceModes({})
+    setItemTotals({})
     setModalOpen(true)
   }
 
@@ -108,10 +111,75 @@ export function PurchasesPage() {
 
   const addItem = () => setForm((prev) => ({ ...prev, items: [...prev.items, { productId: 0, quantity: 1, price: 0 }] }))
 
-  const removeItem = (idx: number) => setForm((prev) => ({ ...prev, items: prev.items.filter((_, i) => i !== idx) }))
+  const removeItem = (idx: number) => {
+    setForm((prev) => ({ ...prev, items: prev.items.filter((_, i) => i !== idx) }))
+    setPriceModes((prev) => {
+      const next: Record<number, 'unit' | 'total'> = {}
+      Object.entries(prev).forEach(([k, v]) => {
+        const i = Number(k)
+        if (i < idx) next[i] = v
+        else if (i > idx) next[i - 1] = v
+      })
+      return next
+    })
+    setItemTotals((prev) => {
+      const next: Record<number, number> = {}
+      Object.entries(prev).forEach(([k, v]) => {
+        const i = Number(k)
+        if (i < idx) next[i] = v
+        else if (i > idx) next[i - 1] = v
+      })
+      return next
+    })
+  }
 
-  const updateItem = (idx: number, field: keyof PurchaseItemRequest, value: number) =>
-    setForm((prev) => ({ ...prev, items: prev.items.map((item, i) => (i === idx ? { ...item, [field]: value } : item)) }))
+  const togglePriceMode = (idx: number) => {
+    const currentMode = priceModes[idx] ?? 'unit'
+    if (currentMode === 'unit') {
+      const item = form.items[idx]
+      const total = item.quantity * item.price
+      setItemTotals((prev) => ({ ...prev, [idx]: total }))
+      setPriceModes((prev) => ({ ...prev, [idx]: 'total' }))
+    } else {
+      setPriceModes((prev) => ({ ...prev, [idx]: 'unit' }))
+    }
+  }
+
+  const handleQuantityChange = (idx: number, value: number) => {
+    const mode = priceModes[idx] ?? 'unit'
+    if (mode === 'total') {
+      const currentTotal = itemTotals[idx] ?? 0
+      const newPrice = value > 0 ? Math.round((currentTotal / value) * 100) / 100 : 0
+      setForm((prev) => ({
+        ...prev,
+        items: prev.items.map((item, i) => i === idx ? { ...item, quantity: value, price: newPrice } : item),
+      }))
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        items: prev.items.map((item, i) => i === idx ? { ...item, quantity: value } : item),
+      }))
+    }
+  }
+
+  const handlePriceChange = (idx: number, value: number) => {
+    const mode = priceModes[idx] ?? 'unit'
+    if (mode === 'unit') {
+      setForm((prev) => ({
+        ...prev,
+        items: prev.items.map((item, i) => i === idx ? { ...item, price: value } : item),
+      }))
+      setItemTotals((prev) => ({ ...prev, [idx]: value * form.items[idx].quantity }))
+    } else {
+      setItemTotals((prev) => ({ ...prev, [idx]: value }))
+      const qty = form.items[idx].quantity
+      const newPrice = qty > 0 ? Math.round((value / qty) * 100) / 100 : 0
+      setForm((prev) => ({
+        ...prev,
+        items: prev.items.map((item, i) => i === idx ? { ...item, price: newPrice } : item),
+      }))
+    }
+  }
 
   const handleSave = async () => {
     if (form.items.some((i) => !i.productId)) { toast.error('Selecciona un producto para cada item'); return }
@@ -266,18 +334,33 @@ export function PurchasesPage() {
             const prices = productPrices[item.productId] ?? []
             const bestPrice = prices.length > 0 ? Math.min(...prices.map((p) => p.price)) : null
             const selectedDistributorName = distributors.find((d) => d.id === form.distributorId)?.name
+            const mode = priceModes[idx] ?? 'unit'
             return (
               <div key={idx} className="item-group">
                 <div className="item-row">
                   <SearchableSelect
                     options={products.map((pr) => ({ value: pr.id, label: pr.name, group: pr.areaName }))}
                     value={item.productId}
-                    onChange={(v) => updateItem(idx, 'productId', v)}
+                    onChange={(v) => {
+                      setForm((prev) => ({ ...prev, items: prev.items.map((it, i) => i === idx ? { ...it, productId: v } : it) }))
+                    }}
                     placeholder="Seleccione producto"
                   />
-                  <NumberInput placeholder="Cant" value={item.quantity} min={1} onChange={(v) => updateItem(idx, 'quantity', v)} />
-                  <NumberInput step="0.01" placeholder="Precio" value={item.price} onChange={(v) => updateItem(idx, 'price', v)} />
-                  <span>${(item.quantity * item.price).toLocaleString()}</span>
+                  <NumberInput placeholder="Cant" value={item.quantity} min={1} onChange={(v) => handleQuantityChange(idx, v)} />
+                  {mode === 'unit' ? (
+                    <NumberInput step="0.01" placeholder="Precio" value={item.price} onChange={(v) => handlePriceChange(idx, v)} />
+                  ) : (
+                    <NumberInput step="0.01" placeholder="Total" value={itemTotals[idx] ?? 0} onChange={(v) => handlePriceChange(idx, v)} />
+                  )}
+                  <div className="price-mode-toggle">
+                    <button type="button" className={`price-mode-btn${mode === 'unit' ? ' active' : ''}`} onClick={() => { if (mode !== 'unit') togglePriceMode(idx) }}>Unit</button>
+                    <button type="button" className={`price-mode-btn${mode === 'total' ? ' active' : ''}`} onClick={() => { if (mode !== 'total') togglePriceMode(idx) }}>Total</button>
+                  </div>
+                  <span>
+                    {mode === 'unit'
+                      ? `$${(item.quantity * item.price).toLocaleString()}`
+                      : `P.U.: $${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  </span>
                   {form.items.length > 1 && (
                     <button className="btn btn-sm btn-ghost" onClick={() => removeItem(idx)}><X size={14} /></button>
                   )}
@@ -291,7 +374,7 @@ export function PurchasesPage() {
                         onClick={() => {
                           const dist = distributors.find((d) => d.name === p.distributorName)
                           if (dist) setForm((prev) => ({ ...prev, distributorId: dist.id }))
-                          updateItem(idx, 'price', p.price)
+                          handlePriceChange(idx, p.price)
                         }}
                         type="button"
                       >
