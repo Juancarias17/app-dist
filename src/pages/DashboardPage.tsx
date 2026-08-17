@@ -5,13 +5,17 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import {
-  Package, AlertTriangle, TrendingUp, DollarSign, Calendar,
+  Package, AlertTriangle, TrendingUp, DollarSign, Calendar, Download,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { productsService } from '../services/products.service'
 import { inventoryService } from '../services/inventory.service'
 import { salesService } from '../services/sales.service'
 import { transactionsService } from '../services/transactions.service'
+import { purchasesService } from '../services/purchases.service'
+import { distributorsService } from '../services/distributors.service'
+import { areasService } from '../services/areas.service'
+import { exportToExcel } from '../utils/exportToExcel'
 import './DashboardPage.css'
 import { DatePickerField } from '../components/DatePickerField'
 
@@ -234,6 +238,151 @@ export function DashboardPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchData(desde, hasta) }, [])
 
+  const handleExport = async () => {
+    const toastId = toast.loading('Generando Excel...')
+    try {
+      const [products, inventory, purchases, sales, transactions, distributors, areas] = await Promise.all([
+        productsService.getAll(),
+        inventoryService.getAll(),
+        purchasesService.getAll(),
+        salesService.getAll(),
+        transactionsService.getAll(),
+        distributorsService.getAll(),
+        areasService.getAll(),
+      ])
+
+      const sheets = [
+        {
+          name: 'Productos',
+          columns: [
+            { header: 'Nombre', key: 'name' },
+            { header: 'Area', key: 'areaName' },
+            { header: 'Precio Venta', key: 'sellingPrice' },
+            { header: 'Precio Rec.', key: 'priceRecomendation', format: (v: unknown) => v ? `${v}` : '—' },
+            { header: 'IVA', key: 'iva', format: (v: unknown) => v ? 'Si' : 'No' },
+            { header: 'Stock', key: 'totalStock' },
+            { header: 'Umbral', key: 'threshold' },
+          ],
+          data: products,
+        },
+        {
+          name: 'Inventario',
+          columns: [
+            { header: 'Producto', key: 'Producto' },
+            { header: 'Stock', key: 'Stock' },
+            { header: 'Lote', key: 'Lote' },
+            { header: 'Cantidad', key: 'Cantidad' },
+            { header: 'Costo Unit.', key: 'Costo Unit.' },
+            { header: 'Fecha Compra', key: 'Fecha Compra' },
+          ],
+          data: inventory.flatMap((inv) => {
+            const batches = [...inv.batches].sort((a, b) => a.id - b.id)
+            if (batches.length === 0) {
+              return [{ Producto: inv.productName, Stock: inv.totalQuantity, Lote: '—', Cantidad: 0, 'Costo Unit.': 0, 'Fecha Compra': '—' }]
+            }
+            return batches.map((b, idx) => ({
+              Producto: inv.productName,
+              Stock: inv.totalQuantity,
+              Lote: `Lote #${idx + 1}`,
+              Cantidad: b.quantity,
+              'Costo Unit.': b.unitCost,
+              'Fecha Compra': b.purchaseDate,
+            }))
+          }),
+        },
+        {
+          name: 'Compras',
+          columns: [
+            { header: 'ID', key: 'ID' },
+            { header: 'Distribuidor', key: 'Distribuidor' },
+            { header: 'Fecha', key: 'Fecha' },
+            { header: 'Descripcion', key: 'Descripcion' },
+            { header: 'Producto', key: 'Producto' },
+            { header: 'Cantidad', key: 'Cantidad' },
+            { header: 'Precio Unit.', key: 'Precio Unit.' },
+            { header: 'Subtotal', key: 'Subtotal' },
+            { header: 'Total Compra', key: 'Total Compra' },
+          ],
+          data: purchases.flatMap((p) => p.items.map((item) => ({
+            ID: p.id,
+            Distribuidor: p.distributorName,
+            Fecha: p.purchaseDate,
+            Descripcion: p.description || '',
+            Producto: item.productName,
+            Cantidad: item.quantity,
+            'Precio Unit.': item.price,
+            Subtotal: item.total,
+            'Total Compra': p.total,
+          }))),
+        },
+        {
+          name: 'Ventas',
+          columns: [
+            { header: 'ID', key: 'ID' },
+            { header: 'Cliente', key: 'Cliente' },
+            { header: 'Fecha', key: 'Fecha' },
+            { header: 'Descripcion', key: 'Descripcion' },
+            { header: 'Producto', key: 'Producto' },
+            { header: 'Cantidad', key: 'Cantidad' },
+            { header: 'Precio Unit.', key: 'Precio Unit.' },
+            { header: 'Subtotal', key: 'Subtotal' },
+            { header: 'Costo Lote', key: 'Costo Lote' },
+            { header: 'Utilidad', key: 'Utilidad' },
+            { header: 'Total Venta', key: 'Total Venta' },
+          ],
+          data: sales.flatMap((s) => s.items.map((item) => ({
+            ID: s.id,
+            Cliente: s.clientName,
+            Fecha: s.saleDate,
+            Descripcion: s.description || '',
+            Producto: item.productName,
+            Cantidad: item.quantity,
+            'Precio Unit.': item.price,
+            Subtotal: item.total,
+            'Costo Lote': item.costoLote,
+            Utilidad: item.utilidad,
+            'Total Venta': s.total,
+          }))),
+        },
+        {
+          name: 'Finanzas',
+          columns: [
+            { header: 'Tipo', key: 'Tipo' },
+            { header: 'Fecha', key: 'date' },
+            { header: 'Contraparte', key: 'counterpart' },
+            { header: 'Monto', key: 'amount' },
+            { header: 'Descripcion', key: 'description' },
+          ],
+          data: transactions.map((t) => ({
+            ...t,
+            Tipo: t.type === 'INCOME' ? 'Ingreso' : t.type === 'OUTCOME' ? 'Egreso' : 'Inversion',
+          })),
+        },
+        {
+          name: 'Distribuidores',
+          columns: [
+            { header: 'Nombre', key: 'name' },
+            { header: 'Contacto', key: 'contact' },
+          ],
+          data: distributors,
+        },
+        {
+          name: 'Areas',
+          columns: [
+            { header: 'Nombre', key: 'name' },
+            { header: 'Margen', key: 'margen', format: (v: unknown) => `${((v as number) * 100).toFixed(0)}%` },
+          ],
+          data: areas,
+        },
+      ]
+
+      await exportToExcel(sheets, 'DistriDentales_Export')
+      toast.success('Excel descargado', { id: toastId })
+    } catch {
+      toast.error('Error al generar Excel', { id: toastId })
+    }
+  }
+
   const applyPreset = (months: number) => {
     const d = monthsAgoISO(months)
     const h = todayISO()
@@ -288,7 +437,10 @@ export function DashboardPage() {
       animate="visible"
     >
       <div className="dash-header">
-        <h1 className="page-title">Dashboard</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <h1 className="page-title" style={{ margin: 0 }}>Dashboard</h1>
+          <button className="btn" onClick={handleExport}><Download size={16} /> Exportar Excel</button>
+        </div>
         <div className="dash-filters">
           <div className="preset-group">
             {PRESETS.map((p) => (

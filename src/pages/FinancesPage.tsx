@@ -44,6 +44,14 @@ export function FinancesPage() {
 
   const { sortKey, sortDir, toggleSort, sortedData: sortedTransactions } = useSortableTable(transactions)
 
+  const typeLabel = (t: TypeTransaction) => {
+    switch (t) {
+      case 'INCOME': return 'Ingreso'
+      case 'OUTCOME': return 'Egreso'
+      case 'INVESTMENT': return 'Inversion'
+    }
+  }
+
   const fetchTransactions = () => {
     const p: { type?: TypeTransaction; desde?: string; hasta?: string } = {}
     if (filterType) p.type = filterType
@@ -78,14 +86,6 @@ export function FinancesPage() {
       toast.error('Error al registrar transacción', { id: toastId })
     }
     setSaving(false)
-  }
-
-  const typeLabel = (t: TypeTransaction) => {
-    switch (t) {
-      case 'INCOME': return 'Ingreso'
-      case 'OUTCOME': return 'Egreso'
-      case 'INVESTMENT': return 'Inversión'
-    }
   }
 
   const cardItems = [
