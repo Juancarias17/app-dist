@@ -146,6 +146,9 @@ export interface SaleResponse {
   description: string
   items: SaleItemResponse[]
   total: number
+  paidAmount: number | null
+  remainingAmount: number | null
+  paymentStatus: string | null
 }
 
 export interface SaleItemResponse {
@@ -170,6 +173,7 @@ export interface SaleCreateRequest {
   saleDate: string
   description?: string
   items: SaleItemRequest[]
+  downPayment?: number
 }
 
 export enum TypeTransaction {
@@ -213,4 +217,26 @@ export interface ApiError {
 export interface FieldViolation {
   field: string
   message: string
+}
+
+export interface DebtResponse {
+  id: number
+  clientName: string
+  totalAmount: number
+  paidAmount: number
+  remainingAmount: number
+  saleId: number
+  status: string
+  createdAt: string
+}
+
+export interface DebtPaymentRequest {
+  amount: number
+  description?: string
+}
+
+export interface DebtSummary {
+  totalRemaining: number
+  totalPaid: number
+  pendingCount: number
 }

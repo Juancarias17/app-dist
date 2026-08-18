@@ -13,6 +13,7 @@ import { SalesPage } from './pages/SalesPage'
 import { FinancesPage } from './pages/FinancesPage'
 import { DistributorsPage } from './pages/DistributorsPage'
 import { AreasPage } from './pages/AreasPage'
+import { DebtorsPage } from './pages/DebtorsPage'
 import './App.css'
 
 function AppRoutes() {
@@ -46,6 +47,7 @@ function AppRoutes() {
                 <Route path="/finanzas" element={<FinancesPage />} />
                 <Route path="/distribuidores" element={<DistributorsPage />} />
                 <Route path="/areas" element={<AreasPage />} />
+                <Route path="/deudores" element={<DebtorsPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

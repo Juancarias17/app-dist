@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Landmark, TrendingUp, TrendingDown, PiggyBank, DollarSign } from 'lucide-react'
+import { Plus, Landmark, TrendingUp, TrendingDown, PiggyBank, DollarSign, Package, AlertTriangle, Calendar, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { transactionsService } from '../services/transactions.service'
+import { inventoryService } from '../services/inventory.service'
+import { debtsService } from '../services/debts.service'
 import { Modal } from '../components/Modal'
 import { NumberInput } from '../components/NumberInput'
 import { SortableTh } from '../components/SortableTh'
@@ -21,6 +23,24 @@ function toLocalDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+function todayISO() {
+  return toLocalDate(new Date())
+}
+
+function monthsAgoISO(n: number) {
+  const d = new Date()
+  d.setMonth(d.getMonth() - n)
+  d.setDate(1)
+  return toLocalDate(d)
+}
+
+const PRESETS = [
+  { label: 'Este Mes', months: 0 },
+  { label: '3 Meses', months: 3 },
+  { label: '6 Meses', months: 6 },
+  { label: 'Este Año', months: 12 },
+]
+
 const emptyForm: TransactionCreateRequest = {
   type: 'INVESTMENT' as TypeTransaction,
   date: toLocalDate(new Date()),
@@ -33,6 +53,8 @@ export function FinancesPage() {
   const [transactions, setTransactions] = useState<TransactionResponse[]>([])
   const [summary, setSummary] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
+  const [inventoryValue, setInventoryValue] = useState(0)
+  const [pendingDebt, setPendingDebt] = useState(0)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState<TransactionCreateRequest>(emptyForm)
@@ -41,6 +63,8 @@ export function FinancesPage() {
   const [filterType, setFilterType] = useState<TypeTransaction | undefined>()
   const [filterDesde, setFilterDesde] = useState('')
   const [filterHasta, setFilterHasta] = useState('')
+  const [tempDesde, setTempDesde] = useState('')
+  const [tempHasta, setTempHasta] = useState('')
 
   const { sortKey, sortDir, toggleSort, sortedData: sortedTransactions } = useSortableTable(transactions)
 
@@ -58,20 +82,39 @@ export function FinancesPage() {
     if (filterDesde) p.desde = filterDesde
     if (filterHasta) p.hasta = filterHasta
 
-    const summaryDesde = p.desde || toLocalDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
-    const summaryHasta = p.hasta || toLocalDate(new Date())
-
     Promise.all([
       transactionsService.getAll(p),
-      transactionsService.getSummary({ desde: summaryDesde, hasta: summaryHasta }),
-    ]).then(([txs, sum]) => {
+      transactionsService.getSummary(filterDesde && filterHasta ? { desde: filterDesde, hasta: filterHasta } : filterDesde ? { desde: filterDesde } : filterHasta ? { hasta: filterHasta } : undefined),
+      inventoryService.getAll(),
+      debtsService.getSummary(),
+    ]).then(([txs, sum, inv, debtSum]) => {
       setTransactions(txs)
       setSummary(sum)
-    }).catch(() => toast.error('Error al cargar transacciones'))
+      const totalInv = inv.reduce((acc, item) => {
+        const stock = item.batches.reduce((s, b) => s + b.quantity, 0)
+        return acc + (item.batches[0]?.sellingPrice ?? 0) * stock
+      }, 0)
+      setInventoryValue(totalInv)
+      setPendingDebt(debtSum.totalRemaining)
+    }).catch(() => toast.error('Error al cargar datos'))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchTransactions() }, [filterType, filterDesde, filterHasta])
+
+  const applyPreset = (months: number) => {
+    const d = monthsAgoISO(months)
+    const h = todayISO()
+    setFilterDesde(d)
+    setFilterHasta(h)
+    setTempDesde(d)
+    setTempHasta(h)
+  }
+
+  const applyCustom = () => {
+    setFilterDesde(tempDesde)
+    setFilterHasta(tempHasta)
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -88,20 +131,40 @@ export function FinancesPage() {
     setSaving(false)
   }
 
-  const cardItems = [
-    { icon: TrendingUp, label: 'Ingresos (Mes)', value: Number(summary.totalIngresos ?? 0), color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
-    { icon: TrendingDown, label: 'Egresos (Mes)', value: Number(summary.totalEgresos ?? 0), color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-    { icon: PiggyBank, label: 'Inversión (Mes)', value: Number(summary.totalInversiones ?? 0), color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-    { icon: DollarSign, label: 'Balance', value: Number(summary.balanceNeto ?? 0), color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  const totalIngresos = Number(summary.totalIngresos ?? 0)
+  const totalEgresos = Number(summary.totalEgresos ?? 0)
+  const totalInversiones = Number(summary.totalInversiones ?? 0)
+  const caja = totalIngresos - totalEgresos + totalInversiones
+
+  const row1Items = [
+    { icon: DollarSign, label: 'Dinero en Caja', value: caja, color: caja >= 0 ? '#22c55e' : '#ef4444', bg: caja >= 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)' },
+    { icon: Package, label: 'Dinero en Inventario', value: inventoryValue, color: '#648ba2', bg: 'rgba(100,139,162,0.1)' },
+    { icon: AlertTriangle, label: 'Dinero no Cancelado', value: pendingDebt, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+  ]
+
+  const row2Items = [
+    { icon: TrendingUp, label: 'Ingresos', value: totalIngresos, color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
+    { icon: TrendingDown, label: 'Egresos', value: totalEgresos, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+    { icon: PiggyBank, label: 'Inversión', value: totalInversiones, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
   ]
 
   if (loading) {
     return (
       <div className="crud-page">
         <div className="crud-header"><h1 className="page-title">Finanzas</h1></div>
-        <div className="cards-row">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="cards-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {[1, 2, 3].map((i) => (
             <div key={i} className="dash-card skeleton">
+              <div className="skeleton-text">
+                <div className="skeleton-line short" />
+                <div className="skeleton-line medium" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="cards-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {[1, 2, 3].map((i) => (
+            <div key={`b-${i}`} className="dash-card skeleton">
               <div className="skeleton-text">
                 <div className="skeleton-line short" />
                 <div className="skeleton-line medium" />
@@ -122,8 +185,8 @@ export function FinancesPage() {
         </button>
       </div>
 
-      <div className="cards-row" style={{ marginBottom: '1.5rem' }}>
-        {cardItems.map((c) => (
+      <div className="cards-row" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {row1Items.map((c) => (
           <motion.div
             key={c.label}
             className="dash-card"
@@ -143,23 +206,53 @@ export function FinancesPage() {
         ))}
       </div>
 
-      <div className="filter-bar">
-        <div className="form-group">
-          <label>Tipo</label>
-          <select value={filterType ?? ''} onChange={(e) => setFilterType(e.target.value ? (e.target.value as TypeTransaction) : undefined)}>
+      <div className="cards-row" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {row2Items.map((c) => (
+          <motion.div
+            key={c.label}
+            className="dash-card"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="dash-card-icon-wrap" style={{ background: c.bg, color: c.color }}>
+              <c.icon size={24} />
+            </div>
+            <div className="dash-card-info">
+              <p className="dash-card-label">{c.label}</p>
+              <p className="dash-card-value">
+                {typeof c.value === 'number' ? `$${c.value.toLocaleString()}` : c.value}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="dash-filters" style={{ marginBottom: '1.5rem' }}>
+        <div className="preset-group">
+          {PRESETS.map((p) => (
+            <button
+              key={p.months}
+              className={`preset-btn${filterDesde === monthsAgoISO(p.months) ? ' active' : ''}`}
+              onClick={() => applyPreset(p.months)}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <div className="date-range">
+          <Calendar size={16} className="date-icon" />
+          <select value={filterType ?? ''} onChange={(e) => setFilterType(e.target.value ? (e.target.value as TypeTransaction) : undefined)} style={{ fontSize: '0.85rem', padding: '0.35rem 0.5rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
             <option value="">Todos</option>
             <option value="INCOME">Ingresos</option>
             <option value="OUTCOME">Egresos</option>
             <option value="INVESTMENT">Inversiones</option>
           </select>
-        </div>
-        <div className="form-group">
-          <label>Desde</label>
-          <DatePickerField value={filterDesde} onChange={setFilterDesde} />
-        </div>
-        <div className="form-group">
-          <label>Hasta</label>
-          <DatePickerField value={filterHasta} onChange={setFilterHasta} />
+          <DatePickerField value={tempDesde} onChange={setTempDesde} />
+          <span className="date-sep">—</span>
+          <DatePickerField value={tempHasta} onChange={setTempHasta} />
+          <button className="btn btn-sm btn-primary" onClick={applyCustom}>
+            Aplicar
+          </button>
         </div>
       </div>
 

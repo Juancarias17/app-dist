@@ -15,6 +15,7 @@ import { transactionsService } from '../services/transactions.service'
 import { purchasesService } from '../services/purchases.service'
 import { distributorsService } from '../services/distributors.service'
 import { areasService } from '../services/areas.service'
+import { debtsService } from '../services/debts.service'
 import { exportToExcel } from '../utils/exportToExcel'
 import './DashboardPage.css'
 import { DatePickerField } from '../components/DatePickerField'
@@ -241,7 +242,7 @@ export function DashboardPage() {
   const handleExport = async () => {
     const toastId = toast.loading('Generando Excel...')
     try {
-      const [products, inventory, purchases, sales, transactions, distributors, areas] = await Promise.all([
+      const [products, inventory, purchases, sales, transactions, distributors, areas, debts] = await Promise.all([
         productsService.getAll(),
         inventoryService.getAll(),
         purchasesService.getAll(),
@@ -249,6 +250,7 @@ export function DashboardPage() {
         transactionsService.getAll(),
         distributorsService.getAll(),
         areasService.getAll(),
+        debtsService.getAll(),
       ])
 
       const sheets = [
@@ -373,6 +375,18 @@ export function DashboardPage() {
             { header: 'Margen', key: 'margen', format: (v: unknown) => `${((v as number) * 100).toFixed(0)}%` },
           ],
           data: areas,
+        },
+        {
+          name: 'Deudores',
+          columns: [
+            { header: 'Cliente', key: 'clientName' },
+            { header: 'Total Deuda', key: 'totalAmount' },
+            { header: 'Abonado', key: 'paidAmount' },
+            { header: 'Pendiente', key: 'remainingAmount' },
+            { header: 'Estado', key: 'status', format: (v: unknown) => v === 'PAID' ? 'Pagado' : 'Pendiente' },
+            { header: 'Venta #', key: 'saleId' },
+          ],
+          data: debts,
         },
       ]
 

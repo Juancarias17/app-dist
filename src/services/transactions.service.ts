@@ -19,6 +19,6 @@ export const transactionsService = {
   update: (id: number, data: TransactionUpdateRequest) =>
     api.put<TransactionResponse>(`/api/transactions/${id}`, data).then((r) => r.data),
 
-  getSummary: (params: { desde: string; hasta: string }) =>
+  getSummary: (params?: { desde?: string; hasta?: string }) =>
     api.get<Record<string, number>>('/api/transactions/summary', { params }).then((r) => r.data),
 }

@@ -112,7 +112,7 @@
 /* ── KPI Cards ── */
 .cards-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.25rem;
   margin-bottom: 2rem;
 }
@@ -162,6 +162,7 @@
   font-weight: 700;
   color: var(--text);
   line-height: 1.2;
+  word-break: break-word;
 }
 
 .dash-card-value.warn {

@@ -37,7 +37,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
   const filtered = useMemo(() => {
     const q = normalize(query.trim())
     const matches = q
-      ? options.filter((o) => normalize(o.label).includes(q))
+      ? options.filter((o) => normalize(o.label).includes(q) || (o.group && normalize(o.group).includes(q)))
       : options
     const groups: { group: string; items: SearchableOption[] }[] = []
     for (const o of matches) {
@@ -49,7 +49,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
     return groups
   }, [options, query])
 
-  const grouped = filtered.length > 1 || filtered.some((g) => g.items.length > 1)
+  const hasGroups = filtered.some((g) => g.group !== '' && g.items.length > 0)
   const totalItems = filtered.reduce((acc, g) => acc + g.items.length, 0)
 
   const computePosition = () => {
@@ -147,7 +147,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = 'Sele
             <div className="searchable-select-list" style={{ maxHeight: pos.maxHeight }}>
               {totalItems === 0 ? (
                 <div className="searchable-select-empty">Sin resultados</div>
-              ) : grouped ? (
+              ) : hasGroups ? (
                 filtered.map((g) => (
                   <Fragment key={g.group}>
                     <div className="searchable-select-group">{g.group || 'Otros'}</div>

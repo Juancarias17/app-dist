@@ -10,6 +10,7 @@ import {
   Landmark,
   Truck,
   Layers,
+  Users,
   LogOut,
   Menu,
   X,
@@ -27,6 +28,7 @@ const navItems = [
   { to: '/inventario', label: 'Inventario', icon: ClipboardList },
   { to: '/compras', label: 'Compras', icon: ShoppingCart },
   { to: '/ventas', label: 'Ventas', icon: DollarSign },
+  { to: '/deudores', label: 'Deudores', icon: Users },
   { to: '/finanzas', label: 'Finanzas', icon: Landmark },
 ]
 

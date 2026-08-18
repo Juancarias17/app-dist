@@ -44,6 +44,8 @@ export function SalesPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [priceModes, setPriceModes] = useState<Record<number, 'unit' | 'total'>>({})
   const [itemTotals, setItemTotals] = useState<Record<number, number>>({})
+  const [paymentType, setPaymentType] = useState<'full' | 'credit'>('full')
+  const [downPaymentAmount, setDownPaymentAmount] = useState(0)
 
   const { sortKey, sortDir, toggleSort, sortedData: sortedSales } = useSortableTable(sales)
 
@@ -102,6 +104,8 @@ export function SalesPage() {
     setForm(emptyForm)
     setPriceModes({})
     setItemTotals({})
+    setPaymentType('full')
+    setDownPaymentAmount(0)
     setModalOpen(true)
   }
 
@@ -201,12 +205,16 @@ export function SalesPage() {
 
   const handleSave = async () => {
     if (form.items.some((i) => !i.inventoryBatchId)) { toast.error('Selecciona un lote para cada item'); return }
+    if (paymentType === 'credit' && downPaymentAmount >= total) { toast.error('El abono debe ser menor al total'); return }
     setSaving(true)
     const toastId = toast.loading('Registrando venta...')
     try {
-      const created = await salesService.create(form)
+      const payload = paymentType === 'credit'
+        ? { ...form, downPayment: downPaymentAmount }
+        : form
+      const created = await salesService.create(payload)
       setSales((prev) => [created, ...prev])
-      toast.success('Venta registrada', { id: toastId })
+      toast.success(paymentType === 'credit' ? 'Venta a crédito registrada' : 'Venta registrada', { id: toastId })
       setModalOpen(false)
     } catch {
       toast.error('Error al registrar venta', { id: toastId })
@@ -381,6 +389,24 @@ export function SalesPage() {
             <label>Descripción</label>
             <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Opcional" />
           </div>
+
+          <div className="form-group">
+            <label>Tipo de Pago</label>
+            <div className="price-mode-toggle" style={{ width: 'fit-content' }}>
+              <button type="button" className={`price-mode-btn${paymentType === 'full' ? ' active' : ''}`} onClick={() => { setPaymentType('full'); setDownPaymentAmount(0) }}>Pago Completo</button>
+              <button type="button" className={`price-mode-btn${paymentType === 'credit' ? ' active' : ''}`} onClick={() => { setPaymentType('credit'); setDownPaymentAmount(0) }}>A Crédito</button>
+            </div>
+          </div>
+
+          {paymentType === 'credit' && (
+            <div className="form-group">
+              <label>Abonado</label>
+              <NumberInput step="0.01" placeholder="Monto abonado" value={downPaymentAmount} min={0} onChange={setDownPaymentAmount} />
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Restante: ${Math.max(0, total - downPaymentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
 
           <div className="total-row">Total: ${total.toLocaleString()}</div>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
