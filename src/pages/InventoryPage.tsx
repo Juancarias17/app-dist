@@ -1,6 +1,6 @@
 import { useEffect, useState, Fragment } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertTriangle, ChevronDown, ChevronUp, ClipboardList, Layers, Trash2 } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronUp, ClipboardList, Filter, Layers, Search, Trash2, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { inventoryService } from '../services/inventory.service'
 import { Modal } from '../components/Modal'
@@ -27,8 +27,13 @@ export function InventoryPage() {
   const [inventory, setInventory] = useState<InventoryResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [lowStock, setLowStock] = useState<InventoryResponse[]>([])
+  const [showLowStockOnly, setShowLowStockOnly] = useState(false)
+  const [filterName, setFilterName] = useState('')
 
-  const { sortKey, sortDir, toggleSort, sortedData: sortedInventory } = useSortableTable(inventory)
+  const { sortKey, sortDir, toggleSort, sortedData: allSorted } = useSortableTable(inventory)
+  const sortedInventory = allSorted
+    .filter((inv) => !showLowStockOnly || inv.totalQuantity <= inv.threshold)
+    .filter((inv) => !filterName || inv.productName.toLowerCase().includes(filterName.toLowerCase()))
 
   const [adjustModal, setAdjustModal] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState<InventoryBatchResponse | null>(null)
@@ -102,11 +107,11 @@ export function InventoryPage() {
         <div className="crud-header"><h1 className="page-title">Inventario</h1></div>
         <div className="table-wrapper">
           <table className="crud-table">
-            <thead><tr><th>Producto</th><th>Stock</th><th>Lotes</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Producto</th><th>Stock</th><th>Umbral</th><th>Precio Venta</th><th>Lotes</th><th>Acciones</th></tr></thead>
             <tbody>
               {[1, 2, 3, 4].map((i) => (
                 <tr key={i} className="skeleton-row">
-                  {[1, 2, 3, 4].map((j) => <td key={j}><div className="skeleton-cell" /></td>)}
+                  {[1, 2, 3, 4, 5, 6].map((j) => <td key={j}><div className="skeleton-cell" /></td>)}
                 </tr>
               ))}
             </tbody>
@@ -130,7 +135,27 @@ export function InventoryPage() {
         >
           <AlertTriangle size={18} />
           <strong>Stock Bajo:</strong> {lowStock.length} producto(s) con stock por debajo del umbral
+          <button
+            className="btn btn-sm"
+            style={{ marginLeft: 'auto', background: 'rgba(245,158,11,0.15)', color: '#92400e', border: '1px solid rgba(245,158,11,0.3)' }}
+            onClick={() => setShowLowStockOnly((prev) => !prev)}
+          >
+            {showLowStockOnly ? <><X size={14} /> Mostrar todos</> : <><Filter size={14} /> Ver solo stock bajo</>}
+          </button>
         </motion.div>
+      )}
+
+      {inventory.length > 0 && (
+        <div className="filter-bar">
+          <div className="form-group">
+            <label>Producto</label>
+            <input
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+              placeholder="Buscar por nombre"
+            />
+          </div>
+        </div>
       )}
 
       <div className="table-wrapper">
@@ -139,6 +164,8 @@ export function InventoryPage() {
             <tr>
               <SortableTh label="Producto" sortKey="productName" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <SortableTh label="Stock Total" sortKey="totalQuantity" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+              <SortableTh label="Umbral" sortKey="threshold" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+              <th>Precio Venta</th>
               <th>Lotes</th>
               <th>Acciones</th>
             </tr>
@@ -163,6 +190,12 @@ export function InventoryPage() {
                           {inv.totalQuantity}
                         </span>
                       </td>
+                      <td data-label="Umbral">
+                        <span className={inv.totalQuantity <= inv.threshold ? 'stock-low' : ''}>
+                          {inv.threshold}
+                        </span>
+                      </td>
+                      <td data-label="Precio Venta">${(batches[0]?.sellingPrice ?? 0).toLocaleString()}</td>
                       <td data-label="Lotes">
                         <button className="btn btn-sm btn-ghost" onClick={() => toggleExpand(inv.id)}>
                           {expandedId === inv.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -192,7 +225,7 @@ export function InventoryPage() {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                         >
-                          <td colSpan={4} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
+                          <td colSpan={6} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
                             <div style={{ padding: '1rem 1.5rem' }}>
                               <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)', marginBottom: '0.75rem' }}>
                                 Lotes de {inv.productName}
@@ -225,7 +258,7 @@ export function InventoryPage() {
                                     </tr>
                                   ))}
                                   {batches.length === 0 && (
-                                    <tr><td colSpan={5} className="empty-row" style={{ padding: '1rem' }}>Sin lotes registrados</td></tr>
+                                    <tr><td colSpan={6} className="empty-row" style={{ padding: '1rem' }}>Sin lotes registrados</td></tr>
                                   )}
                                 </tbody>
                               </table>
@@ -240,9 +273,17 @@ export function InventoryPage() {
             </AnimatePresence>
             {inventory.length === 0 && (
               <tr>
-                <td colSpan={4} className="empty-row">
+                <td colSpan={6} className="empty-row">
                   <ClipboardList size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />
                   No hay inventario registrado
+                </td>
+              </tr>
+            )}
+            {inventory.length > 0 && sortedInventory.length === 0 && (
+              <tr>
+                <td colSpan={6} className="empty-row">
+                  <Search size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />
+                  No se encontraron productos
                 </td>
               </tr>
             )}

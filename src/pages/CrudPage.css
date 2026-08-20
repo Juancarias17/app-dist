@@ -772,4 +772,11 @@
   .price-mode-toggle {
     align-self: flex-start;
   }
+
+  .empty-row {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
 }
