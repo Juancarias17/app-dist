@@ -225,9 +225,16 @@ export interface DebtResponse {
   totalAmount: number
   paidAmount: number
   remainingAmount: number
-  saleId: number
+  saleId: number | null
   status: string
   createdAt: string
+}
+
+export interface DebtCreateRequest {
+  clientName: string
+  totalAmount: number
+  initialPayment?: number
+  description?: string
 }
 
 export interface DebtPaymentRequest {

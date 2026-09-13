@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, DollarSign } from 'lucide-react'
+import { Users, DollarSign, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { debtsService } from '../services/debts.service'
 import { Modal } from '../components/Modal'
@@ -32,6 +32,10 @@ export function DebtorsPage() {
   const [paymentDesc, setPaymentDesc] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [createForm, setCreateForm] = useState({ clientName: '', totalAmount: 0, initialPayment: 0, description: '' })
+  const [creating, setCreating] = useState(false)
+
   const { sortKey, sortDir, toggleSort, sortedData: sortedDebts } = useSortableTable(debts)
 
   const fetchData = (client?: string, status?: string) => {
@@ -56,6 +60,36 @@ export function DebtorsPage() {
     setPaymentAmount(0)
     setPaymentDesc('')
     setPaymentModalOpen(true)
+  }
+
+  const openCreate = () => {
+    setCreateForm({ clientName: '', totalAmount: 0, initialPayment: 0, description: '' })
+    setCreateModalOpen(true)
+  }
+
+  const handleCreate = async () => {
+    if (!createForm.clientName.trim()) { toast.error('El nombre del cliente es obligatorio'); return }
+    if (createForm.totalAmount <= 0) { toast.error('El monto total debe ser mayor a 0'); return }
+    if (createForm.initialPayment >= createForm.totalAmount) {
+      toast.error('El abono inicial debe ser menor que el monto total')
+      return
+    }
+    setCreating(true)
+    const toastId = toast.loading('Creando deuda...')
+    try {
+      await debtsService.create({
+        clientName: createForm.clientName.trim(),
+        totalAmount: createForm.totalAmount,
+        initialPayment: createForm.initialPayment > 0 ? createForm.initialPayment : undefined,
+        description: createForm.description.trim() || undefined,
+      })
+      toast.success('Deuda creada', { id: toastId })
+      setCreateModalOpen(false)
+      fetchData(filterClient || undefined, filterStatus || undefined)
+    } catch {
+      toast.error('Error al crear deuda', { id: toastId })
+    }
+    setCreating(false)
   }
 
   const handlePayment = async () => {
@@ -99,6 +133,9 @@ export function DebtorsPage() {
     <div className="crud-page">
       <div className="crud-header">
         <h1 className="page-title">Deudores</h1>
+        <button className="btn btn-primary" onClick={openCreate}>
+          <Plus size={18} /> Nueva Deuda
+        </button>
       </div>
 
       {summary && (
@@ -200,7 +237,7 @@ export function DebtorsPage() {
                       {d.status === 'PAID' ? 'Pagado' : 'Pendiente'}
                     </span>
                   </td>
-                  <td data-label="Venta">#{d.saleId}</td>
+                  <td data-label="Venta">{d.saleId ? `#${d.saleId}` : '—'}</td>
                   <td data-label="Acciones">
                     {d.status !== 'PAID' && (
                       <button className="btn btn-sm btn-primary" onClick={() => openPayment(d)}>
@@ -222,6 +259,51 @@ export function DebtorsPage() {
           </tbody>
         </table>
       </div>
+
+      <Modal open={createModalOpen} title="Nueva Deuda" onClose={() => setCreateModalOpen(false)}>
+        <div className="modal-form">
+          <div className="form-group">
+            <label>Cliente</label>
+            <input
+              value={createForm.clientName}
+              onChange={(e) => setCreateForm({ ...createForm, clientName: e.target.value })}
+              placeholder="Nombre del cliente"
+            />
+          </div>
+          <div className="form-group">
+            <label>Monto Total</label>
+            <NumberInput
+              step="0.01"
+              placeholder="Monto total"
+              value={createForm.totalAmount}
+              min={0}
+              onChange={(v) => setCreateForm({ ...createForm, totalAmount: v })}
+            />
+          </div>
+          <div className="form-group">
+            <label>Abono Inicial (opcional)</label>
+            <NumberInput
+              step="0.01"
+              placeholder="Abono inicial"
+              value={createForm.initialPayment}
+              min={0}
+              onChange={(v) => setCreateForm({ ...createForm, initialPayment: v })}
+            />
+            <small>Debe ser menor que el monto total</small>
+          </div>
+          <div className="form-group">
+            <label>Descripción (opcional)</label>
+            <input
+              value={createForm.description}
+              onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+              placeholder="Ej: Préstamo en efectivo"
+            />
+          </div>
+          <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
+            {creating ? 'Creando...' : 'Crear Deuda'}
+          </button>
+        </div>
+      </Modal>
 
       <Modal open={paymentModalOpen} title="Registrar Abono" onClose={() => setPaymentModalOpen(false)}>
         <div className="modal-form">
