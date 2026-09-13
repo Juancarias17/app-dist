@@ -47,6 +47,11 @@ export function SalesPage() {
   const [paymentType, setPaymentType] = useState<'full' | 'credit'>('full')
   const [downPaymentAmount, setDownPaymentAmount] = useState(0)
 
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const [selectedSale, setSelectedSale] = useState<SaleResponse | null>(null)
+  const [newPaymentStatus, setNewPaymentStatus] = useState<'PAID' | 'PARTIAL'>('PAID')
+  const [savingPayment, setSavingPayment] = useState(false)
+
   const { sortKey, sortDir, toggleSort, sortedData: sortedSales } = useSortableTable(sales)
 
   const [filterClient, setFilterClient] = useState('')
@@ -107,6 +112,31 @@ export function SalesPage() {
     setPaymentType('full')
     setDownPaymentAmount(0)
     setModalOpen(true)
+  }
+
+  const openPaymentEdit = (sale: SaleResponse) => {
+    setSelectedSale(sale)
+    setNewPaymentStatus(sale.paymentStatus === 'PARTIAL' ? 'PARTIAL' : 'PAID')
+    setPaymentModalOpen(true)
+  }
+
+  const handlePaymentStatus = async () => {
+    if (!selectedSale) return
+    if (newPaymentStatus === selectedSale.paymentStatus) {
+      setPaymentModalOpen(false)
+      return
+    }
+    setSavingPayment(true)
+    const toastId = toast.loading('Actualizando estado de pago...')
+    try {
+      const updated = await salesService.updatePaymentStatus(selectedSale.id, { paymentStatus: newPaymentStatus })
+      setSales((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+      toast.success('Estado de pago actualizado', { id: toastId })
+      setPaymentModalOpen(false)
+    } catch {
+      toast.error('Error al actualizar el estado de pago', { id: toastId })
+    }
+    setSavingPayment(false)
   }
 
   const toggleExpand = (id: number) => setExpandedId((prev) => (prev === id ? null : id))
@@ -272,6 +302,8 @@ export function SalesPage() {
             <SortableTh label="Descripción" sortKey="description" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <th>Items</th>
             <SortableTh label="Total" sortKey="total" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+            <SortableTh label="Pago" sortKey="paymentStatus" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+            <th>Acciones</th>
           </tr></thead>
           <tbody>
             <AnimatePresence>
@@ -288,6 +320,18 @@ export function SalesPage() {
                       </button>
                     </td>
                     <td data-label="Total" style={{ fontWeight: 600 }}>${s.total.toLocaleString()}</td>
+                    <td data-label="Pago">
+                      <span className={`type-badge ${s.paymentStatus === 'PARTIAL' ? 'type-outcome' : 'type-income'}`}>
+                        {s.paymentStatus === 'PARTIAL' ? 'A Crédito' : 'Pago Completo'}
+                      </span>
+                    </td>
+                    <td data-label="Acciones">
+                      <div className="actions-cell">
+                        <button className="btn btn-sm btn-ghost" onClick={() => openPaymentEdit(s)}>
+                          Editar Pago
+                        </button>
+                      </div>
+                    </td>
                   </motion.tr>
 
                   <AnimatePresence>
@@ -298,7 +342,7 @@ export function SalesPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                       >
-                        <td colSpan={5} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
+                        <td colSpan={7} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
                           <div style={{ padding: '1rem 1.5rem' }}>
                             <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)', marginBottom: '0.75rem' }}>
                               Productos de la venta #{s.id}
@@ -331,7 +375,7 @@ export function SalesPage() {
                 </Fragment>
               ))}
             </AnimatePresence>
-            {sales.length === 0 && <tr><td colSpan={5} className="empty-row"><DollarSign size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay ventas registradas</td></tr>}
+            {sales.length === 0 && <tr><td colSpan={7} className="empty-row"><DollarSign size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay ventas registradas</td></tr>}
           </tbody>
         </table>
       </div>
@@ -412,6 +456,60 @@ export function SalesPage() {
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Registrando...' : 'Registrar Venta'}
           </button>
+        </div>
+      </Modal>
+
+      <Modal open={paymentModalOpen} title="Editar Estado de Pago" onClose={() => setPaymentModalOpen(false)}>
+        <div className="modal-form">
+          {selectedSale && (
+            <>
+              <div className="form-group">
+                <label>Venta</label>
+                <input value={`#${selectedSale.id} — ${selectedSale.clientName}`} readOnly style={{ background: 'var(--bg-alt)' }} />
+              </div>
+              <div className="form-group">
+                <label>Total</label>
+                <input value={`$${selectedSale.total.toLocaleString()}`} readOnly style={{ background: 'var(--bg-alt)' }} />
+              </div>
+              {selectedSale.paymentStatus === 'PARTIAL' && (
+                <div className="form-group">
+                  <label>Deuda del cliente</label>
+                  <input
+                    value={`Abonado: $${(selectedSale.paidAmount ?? 0).toLocaleString()} — Pendiente: $${(selectedSale.remainingAmount ?? 0).toLocaleString()}`}
+                    readOnly
+                    style={{ background: 'var(--bg-alt)' }}
+                  />
+                </div>
+              )}
+              <div className="form-group">
+                <label>Tipo de Pago</label>
+                <div className="price-mode-toggle" style={{ width: 'fit-content' }}>
+                  <button
+                    type="button"
+                    className={`price-mode-btn${newPaymentStatus === 'PAID' ? ' active' : ''}`}
+                    onClick={() => setNewPaymentStatus('PAID')}
+                  >
+                    Pago Completo
+                  </button>
+                  <button
+                    type="button"
+                    className={`price-mode-btn${newPaymentStatus === 'PARTIAL' ? ' active' : ''}`}
+                    onClick={() => setNewPaymentStatus('PARTIAL')}
+                  >
+                    A Crédito
+                  </button>
+                </div>
+                <small>
+                  {newPaymentStatus === 'PARTIAL'
+                    ? 'El total de la venta pasará a formar parte de la deuda pendiente del cliente.'
+                    : 'La venta quedará marcada como pagada y se descontará de la deuda del cliente (si la deuda queda en 0, desaparece).'}
+                </small>
+              </div>
+              <button className="btn btn-primary" onClick={handlePaymentStatus} disabled={savingPayment}>
+                {savingPayment ? 'Guardando...' : 'Guardar'}
+              </button>
+            </>
+          )}
         </div>
       </Modal>
     </div>

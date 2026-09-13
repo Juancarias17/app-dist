@@ -36,6 +36,11 @@ export function DebtorsPage() {
   const [createForm, setCreateForm] = useState({ clientName: '', totalAmount: 0, initialPayment: 0, description: '' })
   const [creating, setCreating] = useState(false)
 
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editDebt, setEditDebt] = useState<DebtResponse | null>(null)
+  const [editClientName, setEditClientName] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+
   const { sortKey, sortDir, toggleSort, sortedData: sortedDebts } = useSortableTable(debts)
 
   const fetchData = (client?: string, status?: string) => {
@@ -65,6 +70,28 @@ export function DebtorsPage() {
   const openCreate = () => {
     setCreateForm({ clientName: '', totalAmount: 0, initialPayment: 0, description: '' })
     setCreateModalOpen(true)
+  }
+
+  const openEdit = (debt: DebtResponse) => {
+    setEditDebt(debt)
+    setEditClientName(debt.clientName)
+    setEditModalOpen(true)
+  }
+
+  const handleEdit = async () => {
+    if (!editDebt) return
+    if (!editClientName.trim()) { toast.error('El nombre del cliente es obligatorio'); return }
+    setSavingEdit(true)
+    const toastId = toast.loading('Actualizando cliente...')
+    try {
+      await debtsService.update(editDebt.id, { clientName: editClientName.trim() })
+      toast.success('Cliente actualizado', { id: toastId })
+      setEditModalOpen(false)
+      fetchData(filterClient || undefined, filterStatus || undefined)
+    } catch {
+      toast.error('Error al actualizar cliente', { id: toastId })
+    }
+    setSavingEdit(false)
   }
 
   const handleCreate = async () => {
@@ -239,11 +266,16 @@ export function DebtorsPage() {
                   </td>
                   <td data-label="Venta">{d.saleId ? `#${d.saleId}` : '—'}</td>
                   <td data-label="Acciones">
-                    {d.status !== 'PAID' && (
-                      <button className="btn btn-sm btn-primary" onClick={() => openPayment(d)}>
-                        Registrar Abono
+                    <div className="actions-cell">
+                      {d.status !== 'PAID' && (
+                        <button className="btn btn-sm btn-primary" onClick={() => openPayment(d)}>
+                          Registrar Abono
+                        </button>
+                      )}
+                      <button className="btn btn-sm btn-ghost" onClick={() => openEdit(d)}>
+                        Editar
                       </button>
-                    )}
+                    </div>
                   </td>
                 </motion.tr>
               ))}
@@ -259,6 +291,27 @@ export function DebtorsPage() {
           </tbody>
         </table>
       </div>
+
+      <Modal open={editModalOpen} title="Editar Deuda" onClose={() => setEditModalOpen(false)}>
+        <div className="modal-form">
+          {editDebt && (
+            <>
+              <div className="form-group">
+                <label>Cliente</label>
+                <input
+                  value={editClientName}
+                  onChange={(e) => setEditClientName(e.target.value)}
+                  placeholder="Nombre del cliente"
+                />
+                <small>Si el cliente ya tiene otra deuda pendiente, ambas se unificarán</small>
+              </div>
+              <button className="btn btn-primary" onClick={handleEdit} disabled={savingEdit}>
+                {savingEdit ? 'Guardando...' : 'Guardar'}
+              </button>
+            </>
+          )}
+        </div>
+      </Modal>
 
       <Modal open={createModalOpen} title="Nueva Deuda" onClose={() => setCreateModalOpen(false)}>
         <div className="modal-form">

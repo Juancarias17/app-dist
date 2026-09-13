@@ -1,5 +1,5 @@
 import api from './api'
-import type { SaleResponse, SaleCreateRequest } from '../types'
+import type { SaleResponse, SaleCreateRequest, PaymentStatusUpdateRequest } from '../types'
 
 export const salesService = {
   getAll: (params?: { clientName?: string; productName?: string; desde?: string; hasta?: string }) =>
@@ -10,4 +10,7 @@ export const salesService = {
 
   create: (data: SaleCreateRequest) =>
     api.post<SaleResponse>('/api/sales', data).then((r) => r.data),
+
+  updatePaymentStatus: (id: number, data: PaymentStatusUpdateRequest) =>
+    api.put<SaleResponse>(`/api/sales/${id}/payment-status`, data).then((r) => r.data),
 }

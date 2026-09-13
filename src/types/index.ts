@@ -176,6 +176,10 @@ export interface SaleCreateRequest {
   downPayment?: number
 }
 
+export interface PaymentStatusUpdateRequest {
+  paymentStatus: 'PAID' | 'PARTIAL'
+}
+
 export enum TypeTransaction {
   INCOME = 'INCOME',
   OUTCOME = 'OUTCOME',
@@ -235,6 +239,10 @@ export interface DebtCreateRequest {
   totalAmount: number
   initialPayment?: number
   description?: string
+}
+
+export interface DebtUpdateRequest {
+  clientName: string
 }
 
 export interface DebtPaymentRequest {
