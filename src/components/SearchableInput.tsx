@@ -20,6 +20,7 @@ export function SearchableInput({ value, onChange, options, placeholder }: Searc
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | undefined>(undefined)
+  const focusJustSetRef = useRef(false)
 
   const filtered = useMemo(() => {
     const q = normalize(value.trim())
@@ -39,6 +40,21 @@ export function SearchableInput({ value, onChange, options, placeholder }: Searc
     setPos(computePosition())
     setHighlight(0)
     setOpen(true)
+  }
+
+  const closeDropdown = () => setOpen(false)
+
+  const handleToggle = () => {
+    if (focusJustSetRef.current) {
+      focusJustSetRef.current = false
+      return
+    }
+    if (open) {
+      closeDropdown()
+    } else {
+      inputRef.current?.select()
+      openDropdown()
+    }
   }
 
   const reposition = () => {
@@ -123,7 +139,11 @@ export function SearchableInput({ value, onChange, options, placeholder }: Searc
           onChange(e.target.value)
           openDropdown()
         }}
-        onFocus={openDropdown}
+        onFocus={() => {
+          focusJustSetRef.current = true
+          openDropdown()
+        }}
+        onClick={handleToggle}
         onKeyDown={handleKeyDown}
       />
       <ChevronDown size={14} className={`searchable-input-chevron${open ? ' open' : ''}`} />
