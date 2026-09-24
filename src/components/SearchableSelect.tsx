@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo, Fragment } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Search } from 'lucide-react'
+import { normalize } from '../utils/normalize'
 import './SearchableSelect.css'
 
 export interface SearchableOption {
@@ -15,10 +16,6 @@ interface SearchableSelectProps {
   onChange: (value: number) => void
   placeholder?: string
   className?: string
-}
-
-function normalize(s: string) {
-  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
 export function SearchableSelect({ options, value, onChange, placeholder = 'Seleccione', className }: SearchableSelectProps) {

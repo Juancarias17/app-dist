@@ -184,6 +184,7 @@ export enum TypeTransaction {
   INCOME = 'INCOME',
   OUTCOME = 'OUTCOME',
   INVESTMENT = 'INVESTMENT',
+  OPEX = 'OPEX',
 }
 
 export interface TransactionResponse {

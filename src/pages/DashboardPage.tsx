@@ -191,7 +191,7 @@ export function DashboardPage() {
 
       const byType: Record<string, number> = {}
       transactions.forEach((t) => {
-        const key = t.type === 'INCOME' ? 'Ingresos' : t.type === 'OUTCOME' ? 'Egresos' : 'Inversión'
+        const key = t.type === 'INCOME' ? 'Ingresos' : t.type === 'OUTCOME' ? 'Egresos' : t.type === 'OPEX' ? 'Gastos Operativos' : 'Inversión'
         byType[key] = (byType[key] ?? 0) + t.amount
       })
       setPieData(
@@ -357,7 +357,7 @@ export function DashboardPage() {
           ],
           data: transactions.map((t) => ({
             ...t,
-            Tipo: t.type === 'INCOME' ? 'Ingreso' : t.type === 'OUTCOME' ? 'Egreso' : 'Inversion',
+            Tipo: t.type === 'INCOME' ? 'Ingreso' : t.type === 'OUTCOME' ? 'Egreso' : t.type === 'OPEX' ? 'Gasto Operativo' : 'Inversion',
           })),
         },
         {

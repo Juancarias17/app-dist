@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Landmark, TrendingUp, TrendingDown, PiggyBank, DollarSign, Package, AlertTriangle, Calendar, X } from 'lucide-react'
+import { Plus, Landmark, TrendingUp, TrendingDown, PiggyBank, DollarSign, Package, AlertTriangle, Calendar, X, Receipt, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { transactionsService } from '../services/transactions.service'
 import { inventoryService } from '../services/inventory.service'
@@ -10,6 +10,7 @@ import { NumberInput } from '../components/NumberInput'
 import { SortableTh } from '../components/SortableTh'
 import { useSortableTable } from '../hooks/useSortableTable'
 import { DatePickerField } from '../components/DatePickerField'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { TransactionResponse, TransactionCreateRequest, TypeTransaction } from '../types'
 import './CrudPage.css'
 import './DashboardPage.css'
@@ -59,6 +60,7 @@ export function FinancesPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState<TransactionCreateRequest>(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<TransactionResponse | null>(null)
 
   const [filterType, setFilterType] = useState<TypeTransaction | undefined>()
   const [filterDesde, setFilterDesde] = useState('')
@@ -73,6 +75,7 @@ export function FinancesPage() {
       case 'INCOME': return 'Ingreso'
       case 'OUTCOME': return 'Egreso'
       case 'INVESTMENT': return 'Inversion'
+      case 'OPEX': return 'Gasto operativo'
     }
   }
 
@@ -131,10 +134,25 @@ export function FinancesPage() {
     setSaving(false)
   }
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    const toastId = toast.loading('Eliminando transacción...')
+    try {
+      await transactionsService.delete(deleteTarget.id)
+      setTransactions((prev) => prev.filter((t) => t.id !== deleteTarget.id))
+      toast.success('Transacción eliminada', { id: toastId })
+      fetchTransactions()
+    } catch (error) {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg ?? 'Error al eliminar transacción', { id: toastId })
+    }
+    setDeleteTarget(null)
+  }
   const totalIngresos = Number(summary.totalIngresos ?? 0)
   const totalEgresos = Number(summary.totalEgresos ?? 0)
   const totalInversiones = Number(summary.totalInversiones ?? 0)
-  const caja = totalIngresos - totalEgresos + totalInversiones
+  const totalGastosOperativos = Number(summary.totalGastosOperativos ?? 0)
+  const caja = totalIngresos - totalEgresos + totalInversiones - totalGastosOperativos
 
   const row1Items = [
     { icon: DollarSign, label: 'Dinero en Caja', value: caja, color: caja >= 0 ? '#22c55e' : '#ef4444', bg: caja >= 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)' },
@@ -146,6 +164,7 @@ export function FinancesPage() {
     { icon: TrendingUp, label: 'Ingresos', value: totalIngresos, color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
     { icon: TrendingDown, label: 'Egresos', value: totalEgresos, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
     { icon: PiggyBank, label: 'Inversión', value: totalInversiones, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+    { icon: Receipt, label: 'Gastos Operativos', value: totalGastosOperativos, color: '#d97706', bg: 'rgba(217,119,6,0.1)' },
   ]
 
   if (loading) {
@@ -206,7 +225,7 @@ export function FinancesPage() {
         ))}
       </div>
 
-      <div className="cards-row" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="cards-row" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
         {row2Items.map((c) => (
           <motion.div
             key={c.label}
@@ -246,6 +265,7 @@ export function FinancesPage() {
             <option value="INCOME">Ingresos</option>
             <option value="OUTCOME">Egresos</option>
             <option value="INVESTMENT">Inversiones</option>
+            <option value="OPEX">Gastos Operativos</option>
           </select>
           <DatePickerField value={tempDesde} onChange={setTempDesde} />
           <span className="date-sep">—</span>
@@ -264,6 +284,7 @@ export function FinancesPage() {
             <SortableTh label="Contraparte" sortKey="counterpart" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <SortableTh label="Monto" sortKey="amount" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             <SortableTh label="Descripción" sortKey="description" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+            <th>Acciones</th>
           </tr></thead>
           <tbody>
             <AnimatePresence>
@@ -274,29 +295,41 @@ export function FinancesPage() {
                 <td data-label="Contraparte">{t.counterpart}</td>
                 <td data-label="Monto" style={{ fontWeight: 600 }}>${t.amount.toLocaleString()}</td>
                 <td data-label="Descripción">{t.description || '—'}</td>
+                <td data-label="Acciones">
+                  <div className="actions-cell">
+                    {t.type === 'INVESTMENT' || t.type === 'OPEX' ? (
+                      <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(t)} title="Eliminar">
+                        <Trash2 size={14} />
+                      </button>
+                    ) : null}
+                  </div>
+                </td>
               </motion.tr>
             ))}
             </AnimatePresence>
             {sortedTransactions.length === 0 && (
-              <tr><td colSpan={5} className="empty-row"><Landmark size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay transacciones registradas</td></tr>
+              <tr><td colSpan={6} className="empty-row"><Landmark size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay transacciones registradas</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <Modal open={modalOpen} title="Nueva Transacción (Inversión)" onClose={() => setModalOpen(false)}>
+      <Modal open={modalOpen} title="Nueva Transacción" onClose={() => setModalOpen(false)}>
         <div className="modal-form">
           <div className="form-group">
             <label>Tipo</label>
-            <input value="Inversión" disabled style={{ opacity: 0.6 }} />
+            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as TypeTransaction })}>
+              <option value="INVESTMENT">Inversión</option>
+              <option value="OPEX">Gasto Operativo</option>
+            </select>
           </div>
           <div className="form-group">
             <label>Fecha</label>
             <DatePickerField value={form.date} onChange={(v) => setForm({ ...form, date: v })} />
           </div>
           <div className="form-group">
-            <label>Contraparte (inversor)</label>
-            <input value={form.counterpart} onChange={(e) => setForm({ ...form, counterpart: e.target.value })} placeholder="Nombre del inversor" />
+            <label>Contraparte</label>
+            <input value={form.counterpart} onChange={(e) => setForm({ ...form, counterpart: e.target.value })} placeholder="Cliente, proveedor o aportante" />
           </div>
           <div className="form-group">
             <label>Monto</label>
@@ -311,6 +344,14 @@ export function FinancesPage() {
           </button>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Eliminar Transacción"
+        message={`¿Estás seguro de eliminar este movimiento de ${deleteTarget?.type === 'OPEX' ? 'gastos operativos' : 'inversión'} por $${deleteTarget?.amount.toLocaleString() ?? ''}?`}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

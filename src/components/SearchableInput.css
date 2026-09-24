@@ -1,0 +1,28 @@
+.searchable-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchable-input input {
+  width: 100%;
+  padding-right: 2rem;
+}
+
+.searchable-input-chevron {
+  position: absolute;
+  right: 0.6rem;
+  pointer-events: none;
+  color: var(--text-muted);
+  transition: transform var(--transition);
+}
+
+.searchable-input-chevron.open {
+  transform: rotate(180deg);
+}
+
+.searchable-select-option.highlighted {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}

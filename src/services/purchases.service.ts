@@ -10,4 +10,7 @@ export const purchasesService = {
 
   create: (data: PurchaseCreateRequest) =>
     api.post<PurchaseResponse>('/api/purchases', data).then((r) => r.data),
+
+  delete: (id: number) =>
+    api.delete<void>(`/api/purchases/${id}`).then((r) => r.data),
 }

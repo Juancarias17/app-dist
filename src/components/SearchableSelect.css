@@ -3,8 +3,8 @@
 }
 
 .item-row .searchable-select {
-  flex: 2;
-  min-width: 120px;
+  flex: 3;
+  min-width: 200px;
 }
 
 @media (max-width: 768px) {
@@ -43,7 +43,9 @@
 .searchable-select-value {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .searchable-select-chevron {

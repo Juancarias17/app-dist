@@ -21,4 +21,7 @@ export const transactionsService = {
 
   getSummary: (params?: { desde?: string; hasta?: string }) =>
     api.get<Record<string, number>>('/api/transactions/summary', { params }).then((r) => r.data),
+
+  delete: (id: number) =>
+    api.delete<void>(`/api/transactions/${id}`).then((r) => r.data),
 }

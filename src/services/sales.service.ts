@@ -13,4 +13,7 @@ export const salesService = {
 
   updatePaymentStatus: (id: number, data: PaymentStatusUpdateRequest) =>
     api.put<SaleResponse>(`/api/sales/${id}/payment-status`, data).then((r) => r.data),
+
+  delete: (id: number) =>
+    api.delete<void>(`/api/sales/${id}`).then((r) => r.data),
 }

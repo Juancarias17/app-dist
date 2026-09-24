@@ -442,6 +442,7 @@
   color: var(--text);
   min-width: 60px;
   text-align: right;
+  margin-left: auto;
 }
 
 .add-item-btn {
@@ -574,6 +575,11 @@
 .type-investment {
   background: var(--info-light);
   color: #1e40af;
+}
+
+.type-opex {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 /* Confirm dialog */
@@ -767,6 +773,7 @@
 
   .item-row span {
     text-align: left;
+    margin-left: 0;
   }
 
   .price-mode-toggle {

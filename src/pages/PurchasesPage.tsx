@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, Fragment } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ShoppingCart, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, ShoppingCart, X, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { purchasesService } from '../services/purchases.service'
 import { distributorsService } from '../services/distributors.service'
@@ -11,6 +11,7 @@ import { SearchableSelect } from '../components/SearchableSelect'
 import { SortableTh } from '../components/SortableTh'
 import { useSortableTable } from '../hooks/useSortableTable'
 import { DatePickerField } from '../components/DatePickerField'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import type {
   PurchaseResponse,
   PurchaseCreateRequest,
@@ -55,6 +56,7 @@ export function PurchasesPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<PurchaseResponse | null>(null)
 
   const [productPrices, setProductPrices] = useState<Record<number, DistributorPriceResponse[]>>({})
   const [priceModes, setPriceModes] = useState<Record<number, 'unit' | 'total'>>({})
@@ -196,6 +198,20 @@ export function PurchasesPage() {
     setSaving(false)
   }
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    const toastId = toast.loading('Eliminando compra...')
+    try {
+      await purchasesService.delete(deleteTarget.id)
+      setPurchases((prev) => prev.filter((p) => p.id !== deleteTarget.id))
+      toast.success('Compra eliminada', { id: toastId })
+    } catch (error) {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg ?? 'Error al eliminar compra', { id: toastId })
+    }
+    setDeleteTarget(null)
+  }
+
   if (loading) {
     return (
       <div className="crud-page">
@@ -250,6 +266,7 @@ export function PurchasesPage() {
               <SortableTh label="Descripción" sortKey="description" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
               <th>Items</th>
               <SortableTh label="Total" sortKey="total" activeSortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -267,6 +284,13 @@ export function PurchasesPage() {
                       </button>
                     </td>
                     <td data-label="Total" style={{ fontWeight: 600 }}>${p.total.toLocaleString()}</td>
+                    <td data-label="Acciones">
+                      <div className="actions-cell">
+                        <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(p)} title="Eliminar">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
                   </motion.tr>
 
                   <AnimatePresence>
@@ -277,7 +301,7 @@ export function PurchasesPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                       >
-                        <td colSpan={5} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
+                        <td colSpan={6} style={{ padding: 0, background: 'var(--bg-alt)', borderBottom: '2px solid var(--border)' }}>
                           <div style={{ padding: '1rem 1.5rem' }}>
                             <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)', marginBottom: '0.75rem' }}>
                               Productos de la compra #{p.id}
@@ -310,7 +334,7 @@ export function PurchasesPage() {
                 </Fragment>
               ))}
             </AnimatePresence>
-            {purchases.length === 0 && <tr><td colSpan={5} className="empty-row"><ShoppingCart size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay compras registradas</td></tr>}
+            {purchases.length === 0 && <tr><td colSpan={6} className="empty-row"><ShoppingCart size={40} style={{ opacity: 0.3, marginBottom: 8 }} /><br />No hay compras registradas</td></tr>}
           </tbody>
         </table>
       </div>
@@ -356,14 +380,14 @@ export function PurchasesPage() {
                     <button type="button" className={`price-mode-btn${mode === 'unit' ? ' active' : ''}`} onClick={() => { if (mode !== 'unit') togglePriceMode(idx) }}>Unit</button>
                     <button type="button" className={`price-mode-btn${mode === 'total' ? ' active' : ''}`} onClick={() => { if (mode !== 'total') togglePriceMode(idx) }}>Total</button>
                   </div>
+                  {form.items.length > 1 && (
+                    <button className="btn btn-sm btn-ghost" onClick={() => removeItem(idx)}><X size={14} /></button>
+                  )}
                   <span>
                     {mode === 'unit'
                       ? `$${(item.quantity * item.price).toLocaleString()}`
                       : `P.U.: $${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   </span>
-                  {form.items.length > 1 && (
-                    <button className="btn btn-sm btn-ghost" onClick={() => removeItem(idx)}><X size={14} /></button>
-                  )}
                 </div>
                 {prices.length > 0 && (
                   <div className="price-options">
@@ -400,6 +424,14 @@ export function PurchasesPage() {
           </button>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Eliminar Compra"
+        message={`¿Estás seguro de eliminar la compra a "${deleteTarget?.distributorName}"? Esto también remueve los lotes de inventario asociados.`}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

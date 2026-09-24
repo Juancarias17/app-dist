@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Users, DollarSign, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { debtsService } from '../services/debts.service'
 import { Modal } from '../components/Modal'
 import { NumberInput } from '../components/NumberInput'
+import { SearchableInput } from '../components/SearchableInput'
 import { SortableTh } from '../components/SortableTh'
 import { useSortableTable } from '../hooks/useSortableTable'
 import type { DebtResponse, DebtSummary } from '../types'
@@ -42,6 +43,11 @@ export function DebtorsPage() {
   const [savingEdit, setSavingEdit] = useState(false)
 
   const { sortKey, sortDir, toggleSort, sortedData: sortedDebts } = useSortableTable(debts)
+
+  const knownClients = useMemo(
+    () => [...new Set(debts.map((d) => d.clientName.trim()).filter((n) => n !== ''))].sort((a, b) => a.localeCompare(b)),
+    [debts],
+  )
 
   const fetchData = (client?: string, status?: string) => {
     const params: { clientName?: string; status?: string } = {}
@@ -317,9 +323,10 @@ export function DebtorsPage() {
         <div className="modal-form">
           <div className="form-group">
             <label>Cliente</label>
-            <input
+            <SearchableInput
               value={createForm.clientName}
-              onChange={(e) => setCreateForm({ ...createForm, clientName: e.target.value })}
+              onChange={(v) => setCreateForm({ ...createForm, clientName: v })}
+              options={knownClients}
               placeholder="Nombre del cliente"
             />
           </div>

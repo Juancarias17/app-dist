@@ -1,15 +1,17 @@
-import { useEffect, useRef, useState, Fragment } from 'react'
+import { useEffect, useRef, useState, Fragment, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, DollarSign, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, DollarSign, X, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { salesService } from '../services/sales.service'
 import { inventoryService } from '../services/inventory.service'
 import { Modal } from '../components/Modal'
 import { NumberInput } from '../components/NumberInput'
 import { SearchableSelect } from '../components/SearchableSelect'
+import { SearchableInput } from '../components/SearchableInput'
 import { SortableTh } from '../components/SortableTh'
 import { useSortableTable } from '../hooks/useSortableTable'
 import { DatePickerField } from '../components/DatePickerField'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { SaleResponse, SaleCreateRequest, SaleItemRequest, InventoryBatchResponse } from '../types'
 import './CrudPage.css'
 
@@ -42,6 +44,7 @@ export function SalesPage() {
   const [batchLabels, setBatchLabels] = useState<Record<number, string>>({})
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<SaleResponse | null>(null)
   const [priceModes, setPriceModes] = useState<Record<number, 'unit' | 'total'>>({})
   const [itemTotals, setItemTotals] = useState<Record<number, number>>({})
   const [paymentType, setPaymentType] = useState<'full' | 'credit'>('full')
@@ -53,6 +56,11 @@ export function SalesPage() {
   const [savingPayment, setSavingPayment] = useState(false)
 
   const { sortKey, sortDir, toggleSort, sortedData: sortedSales } = useSortableTable(sales)
+
+  const knownClients = useMemo(
+    () => [...new Set(sales.map((s) => s.clientName.trim()).filter((n) => n !== ''))].sort((a, b) => a.localeCompare(b)),
+    [sales],
+  )
 
   const [filterClient, setFilterClient] = useState('')
   const [filterProduct, setFilterProduct] = useState('')
@@ -252,6 +260,20 @@ export function SalesPage() {
     setSaving(false)
   }
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    const toastId = toast.loading('Eliminando venta...')
+    try {
+      await salesService.delete(deleteTarget.id)
+      setSales((prev) => prev.filter((s) => s.id !== deleteTarget.id))
+      toast.success('Venta eliminada', { id: toastId })
+    } catch (error) {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg ?? 'Error al eliminar venta', { id: toastId })
+    }
+    setDeleteTarget(null)
+  }
+
   if (loading) {
     return (
       <div className="crud-page">
@@ -330,6 +352,9 @@ export function SalesPage() {
                         <button className="btn btn-sm btn-ghost" onClick={() => openPaymentEdit(s)}>
                           Editar Pago
                         </button>
+                        <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(s)} title="Eliminar">
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </td>
                   </motion.tr>
@@ -384,7 +409,12 @@ export function SalesPage() {
         <div className="modal-form">
           <div className="form-group">
             <label>Cliente</label>
-            <input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} placeholder="Nombre del cliente" />
+            <SearchableInput
+              value={form.clientName}
+              onChange={(v) => setForm({ ...form, clientName: v })}
+              options={knownClients}
+              placeholder="Nombre del cliente"
+            />
           </div>
           <div className="form-group">
             <label>Fecha</label>
@@ -399,7 +429,7 @@ export function SalesPage() {
                 <SearchableSelect
                   options={availableBatches.map((b) => ({
                     value: b.id,
-                    label: `${batchLabels[b.id] ?? `Lote #${b.id}`} (Stock: ${b.quantity})`,
+                    label: `${b.productName} — ${batchLabels[b.id] ?? `Lote #${b.id}`} (Stock: ${b.quantity})`,
                     group: b.productName,
                   }))}
                   value={item.inventoryBatchId}
@@ -416,14 +446,14 @@ export function SalesPage() {
                   <button type="button" className={`price-mode-btn${mode === 'unit' ? ' active' : ''}`} onClick={() => { if (mode !== 'unit') togglePriceMode(idx) }}>Unit</button>
                   <button type="button" className={`price-mode-btn${mode === 'total' ? ' active' : ''}`} onClick={() => { if (mode !== 'total') togglePriceMode(idx) }}>Total</button>
                 </div>
+                {form.items.length > 1 && (
+                  <button className="btn btn-sm btn-ghost" onClick={() => removeItem(idx)}><X size={14} /></button>
+                )}
                 <span>
                   {mode === 'unit'
                     ? `$${(item.quantity * item.price).toLocaleString()}`
                     : `P.U.: $${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </span>
-                {form.items.length > 1 && (
-                  <button className="btn btn-sm btn-ghost" onClick={() => removeItem(idx)}><X size={14} /></button>
-                )}
               </div>
             )
           })}
@@ -512,6 +542,14 @@ export function SalesPage() {
           )}
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Eliminar Venta"
+        message={`¿Estás seguro de eliminar la venta a "${deleteTarget?.clientName}"? El stock se devolverá a inventario.`}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }
