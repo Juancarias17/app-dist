@@ -171,7 +171,7 @@ export function FinancesPage() {
     return (
       <div className="crud-page">
         <div className="crud-header"><h1 className="page-title">Finanzas</h1></div>
-        <div className="cards-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <div className="cards-row fin-row-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="dash-card skeleton">
               <div className="skeleton-text">
@@ -181,8 +181,8 @@ export function FinancesPage() {
             </div>
           ))}
         </div>
-        <div className="cards-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          {[1, 2, 3].map((i) => (
+        <div className="cards-row fin-row-4">
+          {[1, 2, 3, 4].map((i) => (
             <div key={`b-${i}`} className="dash-card skeleton">
               <div className="skeleton-text">
                 <div className="skeleton-line short" />
@@ -204,7 +204,7 @@ export function FinancesPage() {
         </button>
       </div>
 
-      <div className="cards-row" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="cards-row fin-row-3" style={{ marginBottom: '1.5rem' }}>
         {row1Items.map((c) => (
           <motion.div
             key={c.label}
@@ -225,7 +225,7 @@ export function FinancesPage() {
         ))}
       </div>
 
-      <div className="cards-row" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      <div className="cards-row fin-row-4" style={{ marginBottom: '1.5rem' }}>
         {row2Items.map((c) => (
           <motion.div
             key={c.label}

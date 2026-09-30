@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
   AreaChart, Area, BarChart, Bar, ComposedChart, Line, PieChart, Pie, Cell,
@@ -125,6 +125,11 @@ function formatCompact(n: number): string {
   return `$${n.toFixed(0)}`
 }
 
+function truncateName(name: string, maxChars: number) {
+  if (name.length <= maxChars) return name
+  return `${name.slice(0, maxChars - 1).trimEnd()}…`
+}
+
 export function DashboardPage() {
   const [desde, setDesde] = useState(monthsAgoISO(6))
   const [hasta, setHasta] = useState(todayISO())
@@ -143,6 +148,8 @@ export function DashboardPage() {
   const [topProducts, setTopProducts] = useState<{ name: string; revenue: number; quantity: number }[]>([])
   const [stockHealth, setStockHealth] = useState<{ name: string; value: number; fill: string }[]>([])
   const [stockPct, setStockPct] = useState(100)
+  const topProductsRef = useRef<HTMLDivElement>(null)
+  const [nameAxisWidth, setNameAxisWidth] = useState(160)
 
   const fetchData = useCallback(async (d: string, h: string) => {
     setLoading(true)
@@ -238,6 +245,17 @@ export function DashboardPage() {
   }, [fetchData])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchData(desde, hasta) }, [])
+
+  useEffect(() => {
+    const el = topProductsRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width
+      setNameAxisWidth(Math.round(Math.min(180, Math.max(96, w * 0.35))))
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [loading])
 
   const handleExport = async () => {
     const toastId = toast.loading('Generando Excel...')
@@ -443,6 +461,12 @@ export function DashboardPage() {
     )
   }
 
+  const nameAxisChars = Math.max(10, Math.floor((nameAxisWidth - 10) / 6.2))
+  const topProductsData = topProducts.map((p) => ({
+    ...p,
+    shortName: truncateName(p.name, nameAxisChars),
+  }))
+
   return (
     <motion.div
       className="dashboard"
@@ -607,27 +631,31 @@ export function DashboardPage() {
       </div>
 
       <div className="charts-grid charts-grid-2">
-        <motion.div className="chart-card" variants={chartCardVariants}>
+        <motion.div className="chart-card" variants={chartCardVariants} ref={topProductsRef}>
           <h3>Top Productos</h3>
           {topProducts.length === 0 ? (
             <div className="chart-empty">Sin ventas en este período</div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={340}>
               <BarChart
-                data={topProducts.slice(0, 8)}
+                data={topProductsData.slice(0, 8)}
                 layout="vertical"
-                margin={{ left: 100, right: 40 }}
+                margin={{ left: 6, right: 24 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                 <YAxis
                   type="category"
-                  dataKey="name"
+                  dataKey="shortName"
                   tick={{ fontSize: 11 }}
-                  width={90}
+                  width={nameAxisWidth}
+                  interval={0}
                 />
-                <Tooltip formatter={(v, n) => [toCurrency(Number(v ?? 0)), n === 'revenue' ? 'Ingresos' : 'Cantidad']} />
-                <Bar dataKey="revenue" name="revenue" fill="#648ba2" radius={[0, 4, 4, 0]} barSize={16} />
+                <Tooltip
+                  formatter={(v) => [toCurrency(Number(v ?? 0)), 'Ingresos']}
+                  labelFormatter={(_, payload) => String(payload?.[0]?.payload?.name ?? '')}
+                />
+                <Bar dataKey="revenue" name="Ingresos" fill="#648ba2" radius={[0, 4, 4, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           )}
