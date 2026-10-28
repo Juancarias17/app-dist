@@ -445,6 +445,29 @@
   margin-left: auto;
 }
 
+.item-row .selling-price-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.item-row .selling-price-field span {
+  min-width: 0;
+  margin-left: 0;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.item-row .selling-price-field input {
+  flex: none;
+  width: 85px;
+  min-width: 85px;
+}
+
 .add-item-btn {
   margin-top: 0.25rem;
   align-self: flex-start;
@@ -774,6 +797,16 @@
   .item-row span {
     text-align: left;
     margin-left: 0;
+  }
+
+  .item-row .selling-price-field {
+    width: 100%;
+  }
+
+  .item-row .selling-price-field input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
   }
 
   .price-mode-toggle {

@@ -293,12 +293,13 @@ export function DashboardPage() {
             { header: 'Lote', key: 'Lote' },
             { header: 'Cantidad', key: 'Cantidad' },
             { header: 'Costo Unit.', key: 'Costo Unit.' },
+            { header: 'Precio Venta', key: 'Precio Venta' },
             { header: 'Fecha Compra', key: 'Fecha Compra' },
           ],
           data: inventory.flatMap((inv) => {
             const batches = [...inv.batches].sort((a, b) => a.id - b.id)
             if (batches.length === 0) {
-              return [{ Producto: inv.productName, Stock: inv.totalQuantity, Lote: '—', Cantidad: 0, 'Costo Unit.': 0, 'Fecha Compra': '—' }]
+              return [{ Producto: inv.productName, Stock: inv.totalQuantity, Lote: '—', Cantidad: 0, 'Costo Unit.': 0, 'Precio Venta': 0, 'Fecha Compra': '—' }]
             }
             return batches.map((b, idx) => ({
               Producto: inv.productName,
@@ -306,6 +307,7 @@ export function DashboardPage() {
               Lote: `Lote #${idx + 1}`,
               Cantidad: b.quantity,
               'Costo Unit.': b.unitCost,
+              'Precio Venta': b.sellingPrice,
               'Fecha Compra': b.purchaseDate,
             }))
           }),
@@ -320,6 +322,7 @@ export function DashboardPage() {
             { header: 'Producto', key: 'Producto' },
             { header: 'Cantidad', key: 'Cantidad' },
             { header: 'Precio Unit.', key: 'Precio Unit.' },
+            { header: 'Precio Venta', key: 'Precio Venta' },
             { header: 'Subtotal', key: 'Subtotal' },
             { header: 'Total Compra', key: 'Total Compra' },
           ],
@@ -331,6 +334,7 @@ export function DashboardPage() {
             Producto: item.productName,
             Cantidad: item.quantity,
             'Precio Unit.': item.price,
+            'Precio Venta': item.sellingPrice ?? '',
             Subtotal: item.total,
             'Total Compra': p.total,
           }))),

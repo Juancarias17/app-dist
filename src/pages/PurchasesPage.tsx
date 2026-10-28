@@ -35,7 +35,7 @@ const emptyForm: PurchaseCreateRequest = {
   distributorId: 0,
   purchaseDate: todayLocal(),
   description: '',
-  items: [{ productId: 0, quantity: 1, price: 0 }],
+  items: [{ productId: 0, quantity: 1, price: 0, sellingPrice: 0 }],
 }
 
 export function PurchasesPage() {
@@ -111,7 +111,7 @@ export function PurchasesPage() {
 
   const toggleExpand = (id: number) => setExpandedId((prev) => (prev === id ? null : id))
 
-  const addItem = () => setForm((prev) => ({ ...prev, items: [...prev.items, { productId: 0, quantity: 1, price: 0 }] }))
+  const addItem = () => setForm((prev) => ({ ...prev, items: [...prev.items, { productId: 0, quantity: 1, price: 0, sellingPrice: 0 }] }))
 
   const removeItem = (idx: number) => {
     setForm((prev) => ({ ...prev, items: prev.items.filter((_, i) => i !== idx) }))
@@ -185,6 +185,7 @@ export function PurchasesPage() {
 
   const handleSave = async () => {
     if (form.items.some((i) => !i.productId)) { toast.error('Selecciona un producto para cada item'); return }
+    if (form.items.some((i) => !i.sellingPrice || i.sellingPrice <= 0)) { toast.error('El precio de venta de cada lote debe ser mayor a 0'); return }
     setSaving(true)
     const toastId = toast.loading('Registrando compra...')
     try {
@@ -312,6 +313,7 @@ export function PurchasesPage() {
                                   <th>Producto</th>
                                   <th>Cantidad</th>
                                   <th>Precio Unit.</th>
+                                  <th>Precio Venta</th>
                                   <th>Subtotal</th>
                                 </tr>
                               </thead>
@@ -321,6 +323,7 @@ export function PurchasesPage() {
                                     <td style={{ fontWeight: 500 }}>{item.productName}</td>
                                     <td>{item.quantity}</td>
                                     <td>${item.price.toLocaleString()}</td>
+                                    <td>{item.sellingPrice != null ? `$${item.sellingPrice.toLocaleString()}` : '—'}</td>
                                     <td>${item.total.toLocaleString()}</td>
                                   </tr>
                                 ))}
@@ -366,7 +369,11 @@ export function PurchasesPage() {
                     options={products.map((pr) => ({ value: pr.id, label: pr.name, group: pr.areaName }))}
                     value={item.productId}
                     onChange={(v) => {
-                      setForm((prev) => ({ ...prev, items: prev.items.map((it, i) => i === idx ? { ...it, productId: v } : it) }))
+                      const product = products.find((pr) => pr.id === v)
+                      setForm((prev) => ({
+                        ...prev,
+                        items: prev.items.map((it, i) => i === idx ? { ...it, productId: v, sellingPrice: product?.sellingPrice ?? 0 } : it),
+                      }))
                     }}
                     placeholder="Seleccione producto"
                   />
@@ -380,6 +387,17 @@ export function PurchasesPage() {
                     <button type="button" className={`price-mode-btn${mode === 'unit' ? ' active' : ''}`} onClick={() => { if (mode !== 'unit') togglePriceMode(idx) }}>Unit</button>
                     <button type="button" className={`price-mode-btn${mode === 'total' ? ' active' : ''}`} onClick={() => { if (mode !== 'total') togglePriceMode(idx) }}>Total</button>
                   </div>
+                  <label className="selling-price-field">
+                    <span>Precio venta</span>
+                    <NumberInput
+                      step="0.01"
+                      value={item.sellingPrice ?? 0}
+                      onChange={(v) => setForm((prev) => ({
+                        ...prev,
+                        items: prev.items.map((it, i) => i === idx ? { ...it, sellingPrice: v } : it),
+                      }))}
+                    />
+                  </label>
                   {form.items.length > 1 && (
                     <button className="btn btn-sm btn-ghost" onClick={() => removeItem(idx)}><X size={14} /></button>
                   )}

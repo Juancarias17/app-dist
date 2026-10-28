@@ -94,8 +94,11 @@ export function FinancesPage() {
       setTransactions(txs)
       setSummary(sum)
       const totalInv = inv.reduce((acc, item) => {
-        const stock = item.batches.reduce((s, b) => s + b.quantity, 0)
-        return acc + (item.batches[0]?.sellingPrice ?? 0) * stock
+        const batchValue = item.batches.reduce(
+          (sum, b) => sum + b.quantity * b.sellingPrice,
+          0,
+        )
+        return acc + batchValue
       }, 0)
       setInventoryValue(totalInv)
       setPendingDebt(debtSum.totalRemaining)

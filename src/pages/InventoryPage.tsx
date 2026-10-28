@@ -1,6 +1,6 @@
 import { useEffect, useState, Fragment } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertTriangle, ChevronDown, ChevronUp, ClipboardList, Filter, Layers, Search, Trash2, X } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronUp, ClipboardList, Filter, Layers, Pencil, Search, Trash2, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { inventoryService } from '../services/inventory.service'
 import { Modal } from '../components/Modal'
@@ -23,6 +23,16 @@ function batchLabel(index: number): string {
   return `Lote #${index + 1}`
 }
 
+function priceSummary(batches: InventoryBatchResponse[]): string {
+  if (batches.length === 0) return '—'
+  const prices = batches.map((b) => b.sellingPrice)
+  const min = Math.min(...prices)
+  const max = Math.max(...prices)
+  return min === max
+    ? `$${min.toLocaleString()}`
+    : `$${min.toLocaleString()} - $${max.toLocaleString()}`
+}
+
 export function InventoryPage() {
   const [inventory, setInventory] = useState<InventoryResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,6 +50,12 @@ export function InventoryPage() {
   const [selectedBatchLabel, setSelectedBatchLabel] = useState('')
   const [adjustQty, setAdjustQty] = useState(0)
   const [adjustDirection, setAdjustDirection] = useState<'add' | 'subtract'>('add')
+
+  const [priceModal, setPriceModal] = useState(false)
+  const [priceBatch, setPriceBatch] = useState<InventoryBatchResponse | null>(null)
+  const [priceBatchLabel, setPriceBatchLabel] = useState('')
+  const [newSellingPrice, setNewSellingPrice] = useState(0)
+  const [savingPrice, setSavingPrice] = useState(false)
 
   const [saving, setSaving] = useState(false)
   const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -86,6 +102,27 @@ export function InventoryPage() {
       toast.error('Error al aplicar ajuste')
     }
     setSaving(false)
+  }
+
+  const openPrice = (batch: InventoryBatchResponse, label: string) => {
+    setPriceBatch(batch)
+    setPriceBatchLabel(label)
+    setNewSellingPrice(batch.sellingPrice)
+    setPriceModal(true)
+  }
+
+  const handleUpdatePrice = async () => {
+    if (!priceBatch || newSellingPrice <= 0) return
+    setSavingPrice(true)
+    try {
+      await inventoryService.updateSellingPrice(priceBatch.id, { sellingPrice: newSellingPrice })
+      toast.success('Precio de venta actualizado')
+      setPriceModal(false)
+      fetchAll()
+    } catch {
+      toast.error('Error al actualizar precio de venta')
+    }
+    setSavingPrice(false)
   }
 
   const toggleExpand = (id: number) => setExpandedId((prev) => (prev === id ? null : id))
@@ -195,7 +232,7 @@ export function InventoryPage() {
                           {inv.threshold}
                         </span>
                       </td>
-                      <td data-label="Precio Venta">${(batches[0]?.sellingPrice ?? 0).toLocaleString()}</td>
+                      <td data-label="Precio Venta">{priceSummary(batches)}</td>
                       <td data-label="Lotes">
                         <button className="btn btn-sm btn-ghost" onClick={() => toggleExpand(inv.id)}>
                           {expandedId === inv.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -236,6 +273,7 @@ export function InventoryPage() {
                                     <th>Lote</th>
                                     <th>Cantidad</th>
                                     <th>Costo Unitario</th>
+                                    <th>Precio Venta</th>
                                     <th>Fecha de Compra</th>
                                     <th>Acciones</th>
                                   </tr>
@@ -246,9 +284,13 @@ export function InventoryPage() {
                                       <td style={{ fontWeight: 500 }}>{batchLabel(idx)}</td>
                                       <td>{b.quantity}</td>
                                       <td>${b.unitCost.toLocaleString()}</td>
+                                      <td>${b.sellingPrice.toLocaleString()}</td>
                                       <td>{b.purchaseDate}</td>
                                       <td className="actions-cell">
                                         <button className="btn btn-sm" onClick={() => openAdjust(b, batchLabel(idx))}>Ajustar</button>
+                                        <button className="btn btn-sm" onClick={() => openPrice(b, batchLabel(idx))} disabled={b.archived} title="Editar precio de venta">
+                                          <Pencil size={12} /> Precio
+                                        </button>
                                         {b.quantity === 0 && !b.archived && (
                                           <button className="btn btn-sm btn-danger" onClick={() => handleArchive(b.id)} title="Archivar lote">
                                             <Trash2 size={12} />
@@ -302,6 +344,7 @@ export function InventoryPage() {
               <span><strong>{selectedBatch.productName}</strong></span>
               <span>Stock actual: {selectedBatch.quantity}</span>
               <span>Costo: ${selectedBatch.unitCost.toLocaleString()}</span>
+              <span>Precio venta: ${selectedBatch.sellingPrice.toLocaleString()}</span>
             </div>
           )}
           <div className="form-group">
@@ -339,6 +382,39 @@ export function InventoryPage() {
             disabled={saving || adjustQty <= 0}
           >
             {saving ? 'Aplicando...' : 'Aplicar Ajuste'}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={priceModal}
+        title={`Precio de venta — ${priceBatchLabel}`}
+        onClose={() => setPriceModal(false)}
+      >
+        <div className="modal-form">
+          {priceBatch && (
+            <div className="batch-detail" style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--border)', marginBottom: '0.5rem' }}>
+              <span><strong>{priceBatch.productName}</strong></span>
+              <span>Stock actual: {priceBatch.quantity}</span>
+              <span>Costo: ${priceBatch.unitCost.toLocaleString()}</span>
+              <span>Precio actual: ${priceBatch.sellingPrice.toLocaleString()}</span>
+            </div>
+          )}
+          <div className="form-group">
+            <label>Precio de venta</label>
+            <NumberInput
+              step="0.01"
+              value={newSellingPrice}
+              onChange={setNewSellingPrice}
+              placeholder="Precio de venta"
+            />
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={handleUpdatePrice}
+            disabled={savingPrice || newSellingPrice <= 0}
+          >
+            {savingPrice ? 'Guardando...' : 'Guardar Precio'}
           </button>
         </div>
       </Modal>

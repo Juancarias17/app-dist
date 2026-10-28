@@ -429,7 +429,7 @@ export function SalesPage() {
                 <SearchableSelect
                   options={availableBatches.map((b) => ({
                     value: b.id,
-                    label: `${b.productName} — ${batchLabels[b.id] ?? `Lote #${b.id}`} (Stock: ${b.quantity})`,
+                    label: `${b.productName} — ${batchLabels[b.id] ?? `Lote #${b.id}`} — $${b.sellingPrice.toLocaleString()} (Stock: ${b.quantity})`,
                     group: b.productName,
                   }))}
                   value={item.inventoryBatchId}

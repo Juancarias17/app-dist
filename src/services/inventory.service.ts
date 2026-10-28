@@ -3,6 +3,7 @@ import type {
   InventoryResponse,
   InventoryBatchResponse,
   InventoryAdjustmentRequest,
+  InventoryBatchPriceUpdateRequest,
 } from '../types'
 
 export const inventoryService = {
@@ -27,6 +28,9 @@ export const inventoryService = {
 
   adjustBatch: (data: InventoryAdjustmentRequest) =>
     api.patch<InventoryBatchResponse>('/api/inventory/batches/adjust', data).then((r) => r.data),
+
+  updateSellingPrice: (id: number, data: InventoryBatchPriceUpdateRequest) =>
+    api.patch<InventoryBatchResponse>(`/api/inventory/batches/${id}/selling-price`, data).then((r) => r.data),
 
   archiveBatch: (id: number) =>
     api.patch<InventoryBatchResponse>(`/api/inventory/batches/${id}/archive`).then((r) => r.data),

@@ -109,6 +109,10 @@ export interface InventoryAdjustmentRequest {
   reason: string
 }
 
+export interface InventoryBatchPriceUpdateRequest {
+  sellingPrice: number
+}
+
 export interface PurchaseResponse {
   id: number
   distributorName: string
@@ -123,6 +127,7 @@ export interface PurchaseItemResponse {
   productName: string
   quantity: number
   price: number
+  sellingPrice: number | null
   total: number
 }
 
@@ -130,6 +135,7 @@ export interface PurchaseItemRequest {
   productId: number
   quantity: number
   price: number
+  sellingPrice?: number
 }
 
 export interface PurchaseCreateRequest {
